@@ -106,7 +106,8 @@ def main():
     batch_summary = evaluator.evaluate_batch(
         submissions=submissions,
         master_solution=master_solution,
-        strictness=args.strictness
+        strictness=args.strictness,
+        force_mock=args.mock
     )
 
     # 5. Display Results

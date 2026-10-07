@@ -11,7 +11,7 @@ def client():
 def test_index_route(client):
     res = client.get("/")
     assert res.status_code == 200
-    assert b"Handwrite" in res.data
+    assert b"Assignment Checker" in res.data
 
 def test_api_status_route(client):
     res = client.get("/api/status")
@@ -19,7 +19,6 @@ def test_api_status_route(client):
     data = res.get_json()
     assert "has_api_key" in data
     assert "model_name" in data
-    assert len(data.get("demo_students", [])) == 3
 
 def test_api_demo_master(client):
     res = client.get("/api/demo/master")

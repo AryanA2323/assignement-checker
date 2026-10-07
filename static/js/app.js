@@ -1,295 +1,243 @@
 /**
- * HandwriteAI - Client Application Logic
+ * Assignment Checker - Minimal, Clean Frontend Logic
  */
 
 document.addEventListener("DOMContentLoaded", () => {
     // State
     const state = {
-        masterSource: "demo-master",
-        studentSource: "demo-students",
+        masterMode: "upload", // 'upload' or 'paste'
         masterFile: null,
         studentFiles: [],
-        demoMasterData: null,
-        lastBatchResult: null,
-        currentFilter: "all",
-        hasApiKey: false,
+        currentBatchResults: null
     };
 
-    // DOM Elements
-    const engineBadge = document.getElementById("engineStatusBadge");
-    const engineText = document.getElementById("engineStatusText");
-    const demoQuestionsPeek = document.getElementById("demoQuestionsPeek");
-    const demoStudentsList = document.getElementById("demoStudentsList");
-    const masterDropzone = document.getElementById("masterDropzone");
+    // Elements
+    const apiStatusBadge = document.getElementById("apiStatusBadge");
+    const apiStatusText = document.getElementById("apiStatusText");
+
+    // Master Solution
+    const btnModeUpload = document.getElementById("btnModeUpload");
+    const btnModePaste = document.getElementById("btnModePaste");
+    const masterFileSection = document.getElementById("masterFileSection");
+    const masterTextSection = document.getElementById("masterTextSection");
+    const masterDropZone = document.getElementById("masterDropZone");
     const masterFileInput = document.getElementById("masterFileInput");
-    const masterSelectedFile = document.getElementById("masterSelectedFile");
-    const studentsDropzone = document.getElementById("studentsDropzone");
+    const masterFileInfo = document.getElementById("masterFileInfo");
+    const masterTextInput = document.getElementById("masterTextInput");
+
+    // Student Submissions
+    const studentsDropZone = document.getElementById("studentsDropZone");
     const studentsFileInput = document.getElementById("studentsFileInput");
-    const uploadedFilesPreview = document.getElementById("uploadedFilesPreview");
-    const btnRunEvaluation = document.getElementById("btnRunEvaluation");
+    const studentsFilesList = document.getElementById("studentsFilesList");
+    const filesContainer = document.getElementById("filesContainer");
+    const filesCount = document.getElementById("filesCount");
+    const btnClearFiles = document.getElementById("btnClearFiles");
 
-    const welcomePlaceholder = document.getElementById("welcomePlaceholder");
-    const processingCard = document.getElementById("processingCard");
-    const resultsDashboard = document.getElementById("resultsDashboard");
-    const progressBar = document.getElementById("evaluationProgressBar");
-    const processingTitle = document.getElementById("processingTitle");
-    const processingDetail = document.getElementById("processingDetail");
+    // Action & Controls
+    const strictnessSelect = document.getElementById("strictnessSelect");
+    const btnEvaluate = document.getElementById("btnEvaluate");
+    const loadingCard = document.getElementById("loadingCard");
 
-    const studentCardsContainer = document.getElementById("studentCardsContainer");
-    const filterPills = document.getElementById("filterPills");
+    // Results
+    const resultsSection = document.getElementById("resultsSection");
+    const metricTotal = document.getElementById("metricTotal");
+    const metricAverage = document.getElementById("metricAverage");
+    const metricConfidence = document.getElementById("metricConfidence");
+    const metricReviewCount = document.getElementById("metricReviewCount");
+    const resultsTableBody = document.getElementById("resultsTableBody");
+    const btnExportCSV = document.getElementById("btnExportCSV");
 
-    // Modal Elements
+    // Modals
+    const detailModal = document.getElementById("detailModal");
+    const btnCloseModal = document.getElementById("btnCloseModal");
+    const modalStudentName = document.getElementById("modalStudentName");
+    const modalStudentSub = document.getElementById("modalStudentSub");
+    const modalBody = document.getElementById("modalBody");
+
     const settingsModal = document.getElementById("settingsModal");
     const btnOpenSettings = document.getElementById("btnOpenSettings");
     const btnCloseSettings = document.getElementById("btnCloseSettings");
     const btnSaveSettings = document.getElementById("btnSaveSettings");
-    const btnTestApiKey = document.getElementById("btnTestApiKey");
     const settingApiKey = document.getElementById("settingApiKey");
-    const apiKeyTestStatus = document.getElementById("apiKeyTestStatus");
+    const settingModel = document.getElementById("settingModel");
+    const settingThreshold = document.getElementById("settingThreshold");
+    const settingsStatus = document.getElementById("settingsStatus");
 
-    const imageModal = document.getElementById("imageModal");
-    const btnCloseImageModal = document.getElementById("btnCloseImageModal");
-    const modalFullImage = document.getElementById("modalFullImage");
-    const imageModalTitle = document.getElementById("imageModalTitle");
+    // 1. Initial Load
+    checkApiStatus();
+    setupMasterModeSwitch();
+    setupDropZones();
+    setupModals();
 
-    // 1. Initial Load & Setup
-    async function init() {
-        await checkStatus();
-        await loadDemoMaster();
-        setupTabs();
-        setupDropzones();
-        setupModals();
-        setupExports();
-    }
-
-    // 2. Fetch Backend Status
-    async function checkStatus() {
+    async function checkApiStatus() {
         try {
             const res = await fetch("/api/status");
             const data = await res.json();
-            state.hasApiKey = data.has_api_key;
-
             if (data.has_api_key) {
-                engineBadge.className = "status-badge live";
-                engineText.textContent = `Gemini Live (${data.model_name})`;
+                apiStatusBadge.className = "status-pill status-ready";
+                apiStatusText.textContent = `Gemini AI Connected (${data.model_name})`;
+                settingModel.value = data.model_name || "gemini-3.5-flash-lite";
+                settingThreshold.value = data.review_threshold || 70;
             } else {
-                engineBadge.className = "status-badge mock";
-                engineText.textContent = "Offline Simulation Mode";
+                apiStatusBadge.className = "status-pill";
+                apiStatusBadge.style.color = "#f59e0b";
+                apiStatusBadge.style.background = "rgba(245, 158, 11, 0.12)";
+                apiStatusText.textContent = "Offline Simulation Mode";
             }
-
-            renderDemoStudents(data.demo_students || []);
         } catch (err) {
-            console.error("Status check failed:", err);
-            engineBadge.className = "status-badge mock";
-            engineText.textContent = "Offline Mode";
+            console.error("Status error:", err);
         }
     }
 
-    // 3. Load Demo Master Solution Data
-    async function loadDemoMaster() {
-        try {
-            const res = await fetch("/api/demo/master");
-            const data = await res.json();
-            state.demoMasterData = data;
+    // 2. Master Solution Mode Toggle
+    function setupMasterModeSwitch() {
+        btnModeUpload.addEventListener("click", () => {
+            state.masterMode = "upload";
+            btnModeUpload.classList.add("active");
+            btnModePaste.classList.remove("active");
+            masterFileSection.style.display = "block";
+            masterTextSection.style.display = "none";
+        });
 
-            document.getElementById("demoMasterTitle").textContent = data.title;
-            demoQuestionsPeek.innerHTML = "";
-
-            data.questions.forEach((q) => {
-                const item = document.createElement("div");
-                item.className = "peek-item";
-                item.innerHTML = `<strong>${q.question_id}:</strong> ${q.question_text} <span style="color:#818cf8;float:right">${q.max_marks} marks</span>`;
-                demoQuestionsPeek.appendChild(item);
-            });
-        } catch (err) {
-            console.error("Failed to load demo master:", err);
-        }
-    }
-
-    // 4. Render Demo Students in Left Panel
-    function renderDemoStudents(students) {
-        demoStudentsList.innerHTML = "";
-        students.forEach((st) => {
-            const card = document.createElement("div");
-            card.className = "demo-student-card";
-
-            let tagClass = "tag-med";
-            let tagText = "Average";
-            if (st.name.includes("Alice")) {
-                tagClass = "tag-high";
-                tagText = "High / Neat";
-            } else if (st.name.includes("Charlie")) {
-                tagClass = "tag-low";
-                tagText = "Low / Messy";
-            }
-
-            card.innerHTML = `
-                <img src="${st.url}" class="demo-student-thumb" alt="${st.name}">
-                <div class="demo-student-name">${st.name}</div>
-                <span class="demo-student-tag ${tagClass}">${tagText}</span>
-            `;
-            card.addEventListener("click", () => showImagePreview(st.url, `${st.name}'s Handwritten Paper`));
-            demoStudentsList.appendChild(card);
+        btnModePaste.addEventListener("click", () => {
+            state.masterMode = "paste";
+            btnModePaste.classList.add("active");
+            btnModeUpload.classList.remove("active");
+            masterFileSection.style.display = "none";
+            masterTextSection.style.display = "block";
         });
     }
 
-    // 5. Tabs Setup
-    function setupTabs() {
-        // Master tabs
-        document.querySelectorAll("#masterSourceTabs .pill-btn").forEach((btn) => {
-            btn.addEventListener("click", () => {
-                document.querySelectorAll("#masterSourceTabs .pill-btn").forEach((b) => b.classList.remove("active"));
-                document.querySelectorAll("#tab-demo-master, #tab-upload-master, #tab-paste-master").forEach((el) => el.classList.remove("active"));
-
-                btn.classList.add("active");
-                const target = btn.dataset.tab;
-                state.masterSource = target;
-                document.getElementById(`tab-${target}`).classList.add("active");
-            });
-        });
-
-        // Student tabs
-        document.querySelectorAll("#studentSourceTabs .pill-btn").forEach((btn) => {
-            btn.addEventListener("click", () => {
-                document.querySelectorAll("#studentSourceTabs .pill-btn").forEach((b) => b.classList.remove("active"));
-                document.querySelectorAll("#tab-demo-students, #tab-upload-students").forEach((el) => el.classList.remove("active"));
-
-                btn.classList.add("active");
-                const target = btn.dataset.tab;
-                state.studentSource = target;
-                document.getElementById(`tab-${target}`).classList.add("active");
-            });
-        });
-    }
-
-    // 6. Dropzones Setup
-    function setupDropzones() {
-        // Master Solution Dropzone
-        masterDropzone.addEventListener("click", () => masterFileInput.click());
-        masterDropzone.addEventListener("dragover", (e) => {
+    // 3. Setup Drag & Drop Handlers
+    function setupDropZones() {
+        // Master File
+        masterDropZone.addEventListener("click", () => masterFileInput.click());
+        masterDropZone.addEventListener("dragover", (e) => {
             e.preventDefault();
-            masterDropzone.classList.add("dragover");
+            masterDropZone.classList.add("dragover");
         });
-        masterDropzone.addEventListener("dragleave", () => masterDropzone.classList.remove("dragover"));
-        masterDropzone.addEventListener("drop", (e) => {
+        masterDropZone.addEventListener("dragleave", () => masterDropZone.classList.remove("dragover"));
+        masterDropZone.addEventListener("drop", (e) => {
             e.preventDefault();
-            masterDropzone.classList.remove("dragover");
+            masterDropZone.classList.remove("dragover");
             if (e.dataTransfer.files.length > 0) {
-                handleMasterFile(e.dataTransfer.files[0]);
+                setMasterFile(e.dataTransfer.files[0]);
             }
         });
         masterFileInput.addEventListener("change", (e) => {
             if (e.target.files.length > 0) {
-                handleMasterFile(e.target.files[0]);
+                setMasterFile(e.target.files[0]);
             }
         });
 
-        // Student Submissions Dropzone
-        studentsDropzone.addEventListener("click", () => studentsFileInput.click());
-        studentsDropzone.addEventListener("dragover", (e) => {
+        // Student Files
+        studentsDropZone.addEventListener("click", () => studentsFileInput.click());
+        studentsDropZone.addEventListener("dragover", (e) => {
             e.preventDefault();
-            studentsDropzone.classList.add("dragover");
+            studentsDropZone.classList.add("dragover");
         });
-        studentsDropzone.addEventListener("dragleave", () => studentsDropzone.classList.remove("dragover"));
-        studentsDropzone.addEventListener("drop", (e) => {
+        studentsDropZone.addEventListener("dragleave", () => studentsDropZone.classList.remove("dragover"));
+        studentsDropZone.addEventListener("drop", (e) => {
             e.preventDefault();
-            studentsDropzone.classList.remove("dragover");
-            handleStudentFiles(e.dataTransfer.files);
+            studentsDropZone.classList.remove("dragover");
+            addStudentFiles(e.dataTransfer.files);
         });
         studentsFileInput.addEventListener("change", (e) => {
-            handleStudentFiles(e.target.files);
+            addStudentFiles(e.target.files);
+        });
+
+        btnClearFiles.addEventListener("click", () => {
+            state.studentFiles = [];
+            renderStudentFilesList();
         });
     }
 
-    function handleMasterFile(file) {
+    function setMasterFile(file) {
         state.masterFile = file;
-        masterSelectedFile.style.display = "inline-block";
-        masterSelectedFile.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        masterFileInfo.style.display = "inline-flex";
+        masterFileInfo.innerHTML = `
+            <span>📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
+            <button type="button" style="background:none;border:none;color:#ef4444;cursor:pointer;margin-left:6px;font-weight:bold">&times;</button>
+        `;
+        masterFileInfo.querySelector("button").onclick = () => {
+            state.masterFile = null;
+            masterFileInput.value = "";
+            masterFileInfo.style.display = "none";
+        };
     }
 
-    function handleStudentFiles(fileList) {
+    function addStudentFiles(fileList) {
         for (const file of fileList) {
-            state.studentFiles.push(file);
+            // Avoid duplicate by name and size
+            if (!state.studentFiles.some(f => f.name === file.name && f.size === file.size)) {
+                state.studentFiles.push(file);
+            }
         }
-        renderUploadedFilesPreview();
+        renderStudentFilesList();
     }
 
-    function renderUploadedFilesPreview() {
-        uploadedFilesPreview.innerHTML = "";
-        state.studentFiles.forEach((file, idx) => {
+    function renderStudentFilesList() {
+        if (state.studentFiles.length === 0) {
+            studentsFilesList.style.display = "none";
+            filesContainer.innerHTML = "";
+            filesCount.textContent = "0";
+            return;
+        }
+
+        studentsFilesList.style.display = "block";
+        filesCount.textContent = state.studentFiles.length;
+        filesContainer.innerHTML = "";
+
+        state.studentFiles.forEach((file, index) => {
             const chip = document.createElement("div");
-            chip.className = "upload-item-chip";
+            chip.className = "file-chip";
             chip.innerHTML = `
-                <span>📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
-                <button type="button" style="background:none;border:none;color:#fb7185;cursor:pointer;font-weight:bold" data-idx="${idx}">&times;</button>
+                <span>📄 ${file.name} <small style="color:var(--text-muted)">(${(file.size / 1024).toFixed(1)} KB)</small></span>
+                <button type="button" class="file-chip-remove" title="Remove">&times;</button>
             `;
-            chip.querySelector("button").addEventListener("click", (e) => {
+            chip.querySelector(".file-chip-remove").addEventListener("click", (e) => {
                 e.stopPropagation();
-                state.studentFiles.splice(idx, 1);
-                renderUploadedFilesPreview();
+                state.studentFiles.splice(index, 1);
+                renderStudentFilesList();
             });
-            uploadedFilesPreview.appendChild(chip);
+            filesContainer.appendChild(chip);
         });
     }
 
-    // 7. Evaluation Action
-    btnRunEvaluation.addEventListener("click", async () => {
-        await runEvaluation();
-    });
+    // 4. Run Evaluation
+    btnEvaluate.addEventListener("click", async () => {
+        // Validation
+        if (state.masterMode === "upload" && !state.masterFile) {
+            alert("Please select or drop a Master Solution file, or switch to 'Paste Text'.");
+            return;
+        }
+        if (state.masterMode === "paste" && !masterTextInput.value.trim()) {
+            alert("Please paste your questions and answers in the text area.");
+            return;
+        }
+        if (state.studentFiles.length === 0) {
+            alert("Please upload at least one student handwritten assignment.");
+            return;
+        }
 
-    async function runEvaluation() {
-        welcomePlaceholder.style.display = "none";
-        resultsDashboard.style.display = "none";
-        processingCard.style.display = "block";
-
+        // Prepare request
         const formData = new FormData();
-        const strictness = document.getElementById("strictnessSelect").value;
-        const forceMock = document.getElementById("chkForceMock").checked;
-        formData.append("strictness", strictness);
-        formData.append("force_mock", forceMock ? "true" : "false");
+        formData.append("strictness", strictnessSelect.value);
 
-        // Master Solution
-        if (state.masterSource === "demo-master") {
-            formData.append("use_demo_master", "true");
-        } else if (state.masterSource === "upload-master" && state.masterFile) {
+        if (state.masterMode === "upload") {
             formData.append("master_file", state.masterFile);
-        } else if (state.masterSource === "paste-master") {
-            const text = document.getElementById("masterTextInput").value.trim();
-            if (text) formData.append("master_text", text);
-            else formData.append("use_demo_master", "true");
         } else {
-            formData.append("use_demo_master", "true");
+            formData.append("master_text", masterTextInput.value.trim());
         }
 
-        // Students
-        if (state.studentSource === "demo-students") {
-            formData.append("use_demo_students", "true");
-        } else if (state.studentSource === "upload-students" && state.studentFiles.length > 0) {
-            state.studentFiles.forEach((f) => formData.append("student_files", f));
-        } else {
-            formData.append("use_demo_students", "true");
-        }
+        state.studentFiles.forEach(file => {
+            formData.append("student_files", file);
+        });
 
-        // Animate progress steps for smooth UX
-        let progress = 10;
-        progressBar.style.width = `${progress}%`;
-        const steps = [
-            { pct: 30, title: "Optimizing Images & Normalizing Scans...", desc: "Applying adaptive contrast and resizing for fast multimodal OCR" },
-            { pct: 60, title: "Transcribing Handwriting Strokes...", desc: "Recognizing handwritten answers using deep vision models" },
-            { pct: 85, title: "Cross-Referencing Master Rubrics...", desc: "Evaluating semantic alignment and assigning marks per question" },
-            { pct: 95, title: "Computing Precision Confidence Scores...", desc: "Auditing handwriting legibility and flagging edge cases" }
-        ];
-
-        let stepIndex = 0;
-        const interval = setInterval(() => {
-            if (stepIndex < steps.length) {
-                const s = steps[stepIndex];
-                progressBar.style.width = `${s.pct}%`;
-                processingTitle.textContent = s.title;
-                processingDetail.textContent = s.desc;
-                stepIndex++;
-            }
-        }, 350);
+        // Show loading state
+        loadingCard.style.display = "block";
+        resultsSection.style.display = "none";
+        btnEvaluate.disabled = true;
 
         try {
             const res = await fetch("/api/evaluate", {
@@ -297,317 +245,196 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: formData
             });
 
-            clearInterval(interval);
-            progressBar.style.width = "100%";
-
             if (!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.error || "Evaluation failed");
+                const err = await res.json();
+                throw new Error(err.error || "Evaluation failed");
             }
 
             const data = await res.json();
-            state.lastBatchResult = data;
+            state.currentBatchResults = data;
 
-            setTimeout(() => {
-                processingCard.style.display = "none";
-                resultsDashboard.style.display = "block";
-                renderResults(data);
-            }, 300);
+            loadingCard.style.display = "none";
+            resultsSection.style.display = "block";
+            renderResults(data);
 
         } catch (err) {
-            clearInterval(interval);
-            processingCard.style.display = "none";
-            welcomePlaceholder.style.display = "block";
-            alert(`Evaluation Error: ${err.message}`);
+            loadingCard.style.display = "none";
+            alert(`Error: ${err.message}`);
+        } finally {
+            btnEvaluate.disabled = false;
         }
-    }
+    });
 
-    // 8. Render Results Dashboard
+    // 5. Render Results
     function renderResults(batch) {
-        // Analytics Strip
-        document.getElementById("metricClassAvg").textContent = `${batch.class_average_score} / 20`;
-        document.getElementById("metricClassPct").textContent = `${batch.class_average_percentage}%`;
-        document.getElementById("metricAvgConf").textContent = `${batch.average_confidence}%`;
+        // Summary metrics
+        metricTotal.textContent = batch.total_submissions;
+        metricAverage.textContent = `${batch.class_average_score} (${batch.class_average_percentage}%)`;
+        metricConfidence.textContent = `${batch.average_confidence}%`;
+        metricReviewCount.textContent = batch.flagged_for_review_count;
 
-        const confBadge = document.getElementById("metricConfQuality");
-        if (batch.average_confidence >= 85) {
-            confBadge.textContent = "High Reliability";
-            confBadge.className = "metric-badge conf-badge";
-        } else if (batch.average_confidence >= 70) {
-            confBadge.textContent = "Moderate";
-            confBadge.className = "metric-badge";
+        if (batch.flagged_for_review_count > 0) {
+            document.getElementById("metricReviewBox").style.borderColor = "rgba(245, 158, 11, 0.4)";
         } else {
-            confBadge.textContent = "Audit Needed";
-            confBadge.className = "metric-badge badge-rose";
+            document.getElementById("metricReviewBox").style.borderColor = "var(--border-color)";
         }
 
-        document.getElementById("metricTotalSubs").textContent = batch.total_submissions;
-        document.getElementById("metricProcTime").textContent = `in ${batch.processing_time_total_seconds}s`;
-        document.getElementById("metricFlaggedCount").textContent = batch.flagged_for_review_count;
+        // Populate Table
+        resultsTableBody.innerHTML = "";
+        batch.results.forEach((student, index) => {
+            const row = document.createElement("tr");
 
-        // Toolbar Counts
-        const verifiedCount = batch.results.filter(r => !r.requires_manual_review).length;
-        document.getElementById("countAll").textContent = batch.total_submissions;
-        document.getElementById("countVerified").textContent = verifiedCount;
-        document.getElementById("countFlagged").textContent = batch.flagged_for_review_count;
+            // Confidence class
+            let confClass = "conf-high";
+            if (student.overall_confidence_score < 70) confClass = "conf-low";
+            else if (student.overall_confidence_score < 85) confClass = "conf-med";
 
-        setupFilters(batch.results);
-        renderStudentCards(batch.results);
-    }
+            // Status
+            const statusHtml = student.requires_manual_review
+                ? `<span class="status-badge status-flagged">Needs Review</span>`
+                : `<span class="status-badge status-verified">Verified</span>`;
 
-    // 9. Filter Setup
-    function setupFilters(results) {
-        filterPills.querySelectorAll(".filter-btn").forEach(btn => {
-            btn.onclick = () => {
-                filterPills.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-                state.currentFilter = btn.dataset.filter;
+            row.innerHTML = `
+                <td>
+                    <div class="student-name-cell">${escapeHtml(student.student_name)}</div>
+                    <div class="student-sub-cell">${escapeHtml(student.file_name)} &bull; ${escapeHtml(student.student_id)}</div>
+                </td>
+                <td class="score-cell">${student.total_score} / ${student.max_possible_score}</td>
+                <td>${student.percentage}%</td>
+                <td><span class="conf-tag ${confClass}">${student.overall_confidence_score}%</span></td>
+                <td>${statusHtml}</td>
+                <td>
+                    <button type="button" class="btn-secondary btn-view-detail" data-idx="${index}">View Breakdown</button>
+                </td>
+            `;
 
-                let filtered = results;
-                if (state.currentFilter === "verified") {
-                    filtered = results.filter(r => !r.requires_manual_review);
-                } else if (state.currentFilter === "flagged") {
-                    filtered = results.filter(r => r.requires_manual_review);
-                }
-                renderStudentCards(filtered);
-            };
+            row.querySelector(".btn-view-detail").addEventListener("click", () => {
+                showStudentDetail(student);
+            });
+
+            resultsTableBody.appendChild(row);
         });
+
+        // Scroll to results
+        resultsSection.scrollIntoView({ behavior: "smooth" });
     }
 
-    // 10. Render Student Evaluation Cards
-    function renderStudentCards(students) {
-        studentCardsContainer.innerHTML = "";
+    // 6. Student Detail Modal
+    function showStudentDetail(student) {
+        modalStudentName.textContent = student.student_name;
+        modalStudentSub.textContent = `${student.file_name} • Score: ${student.total_score}/${student.max_possible_score} (${student.percentage}%) • Confidence: ${student.overall_confidence_score}%`;
 
-        if (students.length === 0) {
-            studentCardsContainer.innerHTML = `
-                <div style="text-align:center;padding:40px;color:var(--text-muted)">
-                    No submissions found matching this filter.
+        let html = "";
+
+        // If flagged for review
+        if (student.requires_manual_review && student.review_reasons.length > 0) {
+            html += `
+                <div class="detail-review-alert">
+                    <strong>Review Recommended:</strong>
+                    <ul>
+                        ${student.review_reasons.map(r => `<li>${escapeHtml(r)}</li>`).join("")}
+                    </ul>
                 </div>
             `;
-            return;
         }
 
-        students.forEach((st, idx) => {
-            const card = document.createElement("div");
-            card.className = `student-eval-card ${st.requires_manual_review ? "flagged" : ""}`;
-
-            const initials = st.student_name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase() || "ST";
-            
-            // Confidence gauge calculations
-            const radius = 24;
-            const circumference = 2 * Math.PI * radius;
-            const offset = circumference - (st.overall_confidence_score / 100) * circumference;
-            let gaugeColor = "#10b981"; // emerald
-            if (st.overall_confidence_score < 70) gaugeColor = "#f43f5e"; // rose
-            else if (st.overall_confidence_score < 85) gaugeColor = "#f59e0b"; // amber
-
-            card.innerHTML = `
-                <div class="student-card-top">
-                    <div class="student-meta">
-                        <div class="student-avatar">${initials}</div>
-                        <div>
-                            <h3 class="student-name-title">${st.student_name}</h3>
-                            <div class="student-id-sub">${st.student_id} &bull; ${st.file_name}</div>
-                        </div>
-                    </div>
-
-                    <div class="scores-block">
-                        <div class="score-box">
-                            <div class="score-big">${st.total_score} <span style="font-size:0.9rem;color:var(--text-muted)">/ ${st.max_possible_score}</span></div>
-                            <div class="score-pct">${st.percentage}%</div>
-                        </div>
-
-                        <div class="gauge-wrapper" title="Checking Accuracy Confidence: ${st.overall_confidence_score}%">
-                            <svg class="gauge-svg" viewBox="0 0 58 58">
-                                <circle class="gauge-bg" cx="29" cy="29" r="${radius}"></circle>
-                                <circle class="gauge-fill" cx="29" cy="29" r="${radius}" 
-                                    stroke="${gaugeColor}" 
-                                    stroke-dasharray="${circumference}" 
-                                    stroke-dashoffset="${offset}"></circle>
-                            </svg>
-                            <span class="gauge-value">${Math.round(st.overall_confidence_score)}%</span>
-                        </div>
-                    </div>
-                </div>
-
-                ${st.requires_manual_review ? `
-                    <div class="review-alert-banner">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                            <line x1="12" y1="9" x2="12" y2="13"></line>
-                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                        </svg>
-                        <div>
-                            <div class="review-alert-title">Flagged for Teacher Manual Verification</div>
-                            <ul class="review-alert-list">
-                                ${st.review_reasons.map(r => `<li>${r}</li>`).join("")}
-                            </ul>
-                        </div>
-                    </div>
-                ` : ""}
-
-                <div class="details-toggle-bar">
-                    <button class="btn btn-secondary btn-sm" id="btnPreviewPaper-${idx}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                            <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                        <span>View Original Handwritten Page</span>
-                    </button>
-
-                    <button class="btn-toggle-details" id="btnToggleQ-${idx}">
-                        <span>Show Question Breakdown (${st.question_evaluations.length})</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="questions-breakdown-panel" id="qPanel-${idx}" style="display:none">
-                    ${st.question_evaluations.map(q => `
-                        <div class="question-eval-card">
-                            <div class="q-card-header">
-                                <span class="q-title">${q.question_id}</span>
-                                <div style="display:flex;gap:8px;align-items:center">
-                                    <span style="font-size:0.75rem;color:var(--text-muted)">Confidence: <strong>${q.confidence_score}%</strong> &bull; Legibility: <strong>${q.legibility_score}%</strong></span>
-                                    <span class="q-marks-badge">${q.marks_awarded} / ${q.max_marks} marks</span>
-                                </div>
-                            </div>
-
-                            <div class="transcription-box">
-                                <div class="transcription-label">Student Handwritten Answer (AI Transcribed):</div>
-                                "${q.student_transcription}"
-                            </div>
-
-                            <div class="feedback-box">
-                                <strong>Feedback & Rationale:</strong> ${q.feedback}
-                            </div>
-
-                            <div class="concepts-row">
-                                ${q.key_concepts_covered.map(c => `<span class="concept-tag hit">&check; ${c}</span>`).join("")}
-                                ${q.missing_concepts.map(c => `<span class="concept-tag miss">&times; Missing: ${c}</span>`).join("")}
-                            </div>
-                        </div>
-                    `).join("")}
+        // Overall teacher summary
+        if (student.summary_feedback) {
+            html += `
+                <div style="margin-bottom:16px;padding:12px;background:var(--bg-page);border-radius:var(--radius-sm);font-size:0.86rem;">
+                    <strong>Evaluation Summary:</strong> ${escapeHtml(student.summary_feedback)}
                 </div>
             `;
+        }
 
-            // Toggle Questions Accordion
-            const qBtn = card.querySelector(`#btnToggleQ-${idx}`);
-            const qPanel = card.querySelector(`#qPanel-${idx}`);
-            qBtn.addEventListener("click", () => {
-                const isOpen = qPanel.style.display !== "none";
-                qPanel.style.display = isOpen ? "none" : "flex";
-                qBtn.querySelector("span").textContent = isOpen 
-                    ? `Show Question Breakdown (${st.question_evaluations.length})` 
-                    : "Hide Question Breakdown";
-                qBtn.querySelector("svg").style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
-            });
+        // Question-by-question list
+        html += `<div class="detail-q-list">`;
+        student.question_evaluations.forEach(q => {
+            html += `
+                <div class="detail-q-box">
+                    <div class="detail-q-top">
+                        <span class="detail-q-id">${escapeHtml(q.question_id)}</span>
+                        <span class="detail-q-marks">${q.marks_awarded} / ${q.max_marks} marks</span>
+                    </div>
 
-            // Preview Original Paper
-            const previewBtn = card.querySelector(`#btnPreviewPaper-${idx}`);
-            previewBtn.addEventListener("click", () => {
-                const url = st.preview_url || `/static/demo/${st.file_name}`;
-                showImagePreview(url, `${st.student_name}'s Handwritten Submission`);
-            });
+                    <div class="detail-transcription">
+                        <small style="color:var(--text-muted);display:block;margin-bottom:2px">Transcribed from Handwriting:</small>
+                        "${escapeHtml(q.student_transcription)}"
+                    </div>
 
-            studentCardsContainer.appendChild(card);
+                    <div class="detail-feedback">
+                        <strong>Feedback:</strong> ${escapeHtml(q.feedback)}
+                    </div>
+                </div>
+            `;
         });
+        html += `</div>`;
+
+        modalBody.innerHTML = html;
+        detailModal.style.display = "flex";
     }
 
-    // 11. Image Preview Modal
-    function showImagePreview(url, title) {
-        modalFullImage.src = url;
-        imageModalTitle.textContent = title;
-        imageModal.style.display = "flex";
-    }
-
-    // 12. Modals & Settings
+    // 7. Modals Setup
     function setupModals() {
+        btnCloseModal.addEventListener("click", () => detailModal.style.display = "none");
+        window.addEventListener("click", (e) => {
+            if (e.target === detailModal) detailModal.style.display = "none";
+            if (e.target === settingsModal) settingsModal.style.display = "none";
+        });
+
+        // Settings Modal
         btnOpenSettings.addEventListener("click", () => {
-            apiKeyTestStatus.style.display = "none";
+            settingsStatus.style.display = "none";
             settingsModal.style.display = "flex";
         });
 
-        btnCloseSettings.addEventListener("click", () => {
-            settingsModal.style.display = "none";
-        });
+        btnCloseSettings.addEventListener("click", () => settingsModal.style.display = "none");
 
-        btnCloseImageModal.addEventListener("click", () => {
-            imageModal.style.display = "none";
-        });
-
-        // Close when clicking backdrop
-        window.addEventListener("click", (e) => {
-            if (e.target === settingsModal) settingsModal.style.display = "none";
-            if (e.target === imageModal) imageModal.style.display = "none";
-        });
-
-        // Test API Key
-        btnTestApiKey.addEventListener("click", async () => {
-            const key = settingApiKey.value.trim();
-            apiKeyTestStatus.style.display = "block";
-            apiKeyTestStatus.className = "test-feedback";
-            apiKeyTestStatus.textContent = "Pinging Gemini API...";
-
-            try {
-                const res = await fetch("/api/test-gemini", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ api_key: key })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    apiKeyTestStatus.className = "test-feedback success";
-                    apiKeyTestStatus.textContent = `Success! ${data.message} ("${data.reply}")`;
-                } else {
-                    apiKeyTestStatus.className = "test-feedback error";
-                    apiKeyTestStatus.textContent = data.message || "Failed to connect.";
-                }
-            } catch (err) {
-                apiKeyTestStatus.className = "test-feedback error";
-                apiKeyTestStatus.textContent = `Error: ${err.message}`;
-            }
-        });
-
-        // Save Settings
         btnSaveSettings.addEventListener("click", async () => {
             const key = settingApiKey.value.trim();
-            const model = document.getElementById("settingModel").value;
-            const threshold = document.getElementById("settingThreshold").value;
+            const model = settingModel.value.trim();
+            const threshold = settingThreshold.value.trim();
 
             try {
                 const res = await fetch("/api/settings", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        gemini_api_key: key,
+                        gemini_api_key: key || undefined,
                         model_name: model,
                         review_threshold: threshold
                     })
                 });
+
                 if (res.ok) {
-                    settingsModal.style.display = "none";
-                    await checkStatus();
+                    settingsStatus.className = "status-msg success";
+                    settingsStatus.textContent = "Settings saved!";
+                    settingsStatus.style.display = "block";
+                    setTimeout(() => {
+                        settingsModal.style.display = "none";
+                        checkApiStatus();
+                    }, 800);
                 }
             } catch (err) {
-                alert(`Error saving settings: ${err.message}`);
+                settingsStatus.className = "status-msg error";
+                settingsStatus.textContent = err.message;
+                settingsStatus.style.display = "block";
             }
         });
-    }
 
-    // 13. Export Handlers
-    function setupExports() {
-        document.getElementById("btnExportCSV").addEventListener("click", () => {
+        // Export CSV
+        btnExportCSV.addEventListener("click", () => {
             window.location.href = "/api/export/csv";
         });
-
-        document.getElementById("btnExportJSON").addEventListener("click", () => {
-            window.location.href = "/api/export/json";
-        });
     }
 
-    // Start application
-    init();
+    function escapeHtml(text) {
+        if (!text) return "";
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 });

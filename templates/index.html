@@ -3,320 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HandwriteAI — Automated Assignment Checker & Confidence Evaluator</title>
-    <meta name="description" content="AI-powered automated evaluation of handwritten student assignments with confidence scoring and semantic rubric checking.">
+    <title>Assignment Checker — Handwritten Evaluation & Confidence Scoring</title>
+    <meta name="description" content="Simple, automated AI evaluation of handwritten student assignments against a master solution key with confidence scoring.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <!-- App Container -->
-    <div class="app-wrapper">
+    <div class="app-container">
         <!-- Top Navigation -->
-        <header class="top-nav">
-            <div class="brand">
-                <div class="brand-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="brand-title">Handwrite<span class="gradient-text">AI</span></h1>
-                    <p class="brand-tagline">Automated Assignment Evaluation & Confidence Engine</p>
-                </div>
+        <header class="header">
+            <div class="header-brand">
+                <h1>Assignment Checker</h1>
+                <p>Automated handwritten evaluation with accuracy confidence scoring</p>
             </div>
-
-            <div class="nav-actions">
-                <div id="engineStatusBadge" class="status-badge checking">
-                    <span class="pulse-dot"></span>
-                    <span id="engineStatusText">Checking Engine...</span>
-                </div>
-                <button id="btnOpenSettings" class="btn btn-secondary btn-icon" title="Configure API Key & Settings">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="header-status">
+                <span id="apiStatusBadge" class="status-pill status-ready">
+                    <span class="status-dot"></span>
+                    <span id="apiStatusText">AI Ready</span>
+                </span>
+                <button id="btnOpenSettings" class="btn-secondary btn-icon" title="API Settings">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
-                    <span>Settings</span>
+                    Settings
                 </button>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="main-layout">
-            <!-- Left Config / Input Panel -->
-            <section class="panel panel-inputs">
-                <!-- Section 1: Master Solution -->
-                <div class="card setup-card">
-                    <div class="card-header">
-                        <div class="step-num">1</div>
+        <!-- Main Form / Inputs -->
+        <main class="main-content">
+            <div class="input-grid">
+                <!-- Step 1: Master Solution -->
+                <section class="card input-card">
+                    <div class="step-header">
+                        <span class="step-badge">1</span>
                         <div>
-                            <h2>Master Solution Reference</h2>
-                            <p class="card-subtitle">Official answer key with questions, marks & rubrics</p>
+                            <h2>Master Solution (Answer Key)</h2>
+                            <p class="step-desc">The reference solution against which assignments are graded</p>
                         </div>
                     </div>
 
-                    <div class="tab-pills" id="masterSourceTabs">
-                        <button class="pill-btn active" data-tab="demo-master">Preloaded Demo</button>
-                        <button class="pill-btn" data-tab="upload-master">Upload File</button>
-                        <button class="pill-btn" data-tab="paste-master">Custom Text</button>
+                    <!-- Mode Toggle -->
+                    <div class="mode-switch">
+                        <button type="button" class="switch-btn active" id="btnModeUpload">Upload File</button>
+                        <button type="button" class="switch-btn" id="btnModePaste">Paste Text</button>
                     </div>
 
-                    <!-- Tab: Preloaded Demo -->
-                    <div class="tab-content active" id="tab-demo-master">
-                        <div class="demo-master-box">
-                            <div class="demo-master-badge">Verified Preset</div>
-                            <h3 id="demoMasterTitle">Midterm: Machine Learning Principles</h3>
-                            <p class="demo-master-meta">4 Questions &bull; Total Marks: 20 &bull; Subject: AI & Data Science</p>
-                            <div class="demo-questions-peek" id="demoQuestionsPeek">
-                                <!-- Populated dynamically -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab: Upload Master File -->
-                    <div class="tab-content" id="tab-upload-master">
-                        <div class="dropzone" id="masterDropzone">
-                            <input type="file" id="masterFileInput" accept=".json,.txt,.md" style="display:none">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <!-- Mode: File Upload -->
+                    <div id="masterFileSection" class="upload-section">
+                        <div class="drop-zone" id="masterDropZone">
+                            <input type="file" id="masterFileInput" accept=".json,.txt,.md,.pdf" style="display:none">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="17 8 12 3 7 8"></polyline>
                                 <line x1="12" y1="3" x2="12" y2="15"></line>
                             </svg>
-                            <p class="dropzone-text">Drop Master Solution file (.json or .txt)</p>
-                            <span class="dropzone-sub">or click to browse from device</span>
-                            <div id="masterSelectedFile" class="selected-file-tag" style="display:none"></div>
+                            <p class="drop-title">Drop answer key file here, or click to browse</p>
+                            <p class="drop-hint">Supports JSON, TXT, Markdown, or PDF</p>
                         </div>
+                        <div id="masterFileInfo" class="file-tag" style="display:none"></div>
                     </div>
 
-                    <!-- Tab: Paste Text Master -->
-                    <div class="tab-content" id="tab-paste-master">
-                        <textarea id="masterTextInput" class="form-textarea" rows="4" placeholder="Q1: Explain Supervised learning&#10;Marks: 5&#10;Answer: Supervised learning uses labeled datasets...&#10;Keys: labeled data, prediction"></textarea>
+                    <!-- Mode: Paste Text -->
+                    <div id="masterTextSection" class="text-section" style="display:none">
+                        <textarea id="masterTextInput" class="code-textarea" rows="6" placeholder="Paste your question and answer key here:&#10;&#10;Q1: Explain Supervised Learning with examples.&#10;Marks: 5&#10;Answer: Supervised learning maps inputs to labeled outputs...&#10;&#10;Q2: What is overfitting?&#10;Marks: 5&#10;Answer: Overfitting occurs when the model learns training noise..."></textarea>
                     </div>
-                </div>
+                </section>
 
-                <!-- Section 2: Student Submissions -->
-                <div class="card setup-card">
-                    <div class="card-header">
-                        <div class="step-num">2</div>
+                <!-- Step 2: Student Handwritten Assignments -->
+                <section class="card input-card">
+                    <div class="step-header">
+                        <span class="step-badge">2</span>
                         <div>
-                            <h2>Student Handwritten Papers</h2>
-                            <p class="card-subtitle">Upload scanned notebook pages, phone photos, or PDFs</p>
+                            <h2>Student Handwritten Assignments</h2>
+                            <p class="step-desc">Photos, scans, or PDFs of students' handwritten papers</p>
                         </div>
                     </div>
 
-                    <div class="tab-pills" id="studentSourceTabs">
-                        <button class="pill-btn active" data-tab="demo-students">Preloaded Demo (3 Students)</button>
-                        <button class="pill-btn" data-tab="upload-students">Upload Assignments</button>
-                    </div>
-
-                    <!-- Tab: Demo Students -->
-                    <div class="tab-content active" id="tab-demo-students">
-                        <div class="demo-students-grid" id="demoStudentsList">
-                            <!-- Populated with Alice (High), Bob (Avg), Charlie (Low) -->
-                        </div>
-                    </div>
-
-                    <!-- Tab: Upload Custom Students -->
-                    <div class="tab-content" id="tab-upload-students">
-                        <div class="dropzone" id="studentsDropzone">
-                            <input type="file" id="studentsFileInput" accept="image/*,.pdf" multiple style="display:none">
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                <polyline points="21 15 16 10 5 21"></polyline>
-                            </svg>
-                            <p class="dropzone-text">Drop Student Handwritten Images or PDFs</p>
-                            <span class="dropzone-sub">Supports single or bulk batch uploads (.png, .jpg, .pdf)</span>
-                        </div>
-                        <div id="uploadedFilesPreview" class="uploaded-files-preview"></div>
-                    </div>
-
-                    <!-- Evaluation Controls -->
-                    <div class="evaluation-controls">
-                        <div class="control-group">
-                            <label for="strictnessSelect" class="form-label">Grading Strictness</label>
-                            <select id="strictnessSelect" class="form-select">
-                                <option value="lenient">Lenient (Generous partial credit)</option>
-                                <option value="standard" selected>Standard (Balanced academic rigor)</option>
-                                <option value="strict">Strict (Demands exact technical terms)</option>
-                            </select>
-                        </div>
-
-                        <div class="checkbox-group">
-                            <label class="custom-checkbox">
-                                <input type="checkbox" id="chkForceMock">
-                                <span class="checkmark"></span>
-                                <span>Force Offline Simulation Engine</span>
-                            </label>
-                        </div>
-
-                        <button id="btnRunEvaluation" class="btn btn-primary btn-cta">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
-                            <span>Run AI Assignment Checking</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Right Results & Analytics Panel -->
-            <section class="panel panel-results" id="resultsPanel">
-                <!-- Evaluation State: Welcome / Empty state -->
-                <div id="welcomePlaceholder" class="placeholder-card">
-                    <div class="placeholder-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
+                    <div class="drop-zone" id="studentsDropZone">
+                        <input type="file" id="studentsFileInput" accept="image/*,.pdf" multiple style="display:none">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
+                        <p class="drop-title">Drop student papers here, or click to browse</p>
+                        <p class="drop-hint">Select one or multiple files (.png, .jpg, .jpeg, .pdf)</p>
                     </div>
-                    <h3>Ready for Intelligent Evaluation</h3>
-                    <p>Select your master solution, choose demo or custom handwritten student papers, and click <strong>"Run AI Assignment Checking"</strong>.</p>
-                    <div class="quick-start-chips">
-                        <span class="chip">&check; Fast Multimodal OCR</span>
-                        <span class="chip">&check; Semantic Rubric Matching</span>
-                        <span class="chip">&check; Accuracy Confidence Scoring</span>
-                        <span class="chip">&check; Manual Review Alerts</span>
+
+                    <!-- Selected Files List -->
+                    <div id="studentsFilesList" class="file-list" style="display:none">
+                        <div class="file-list-header">
+                            <span>Selected Files (<span id="filesCount">0</span>)</span>
+                            <button type="button" id="btnClearFiles" class="btn-link">Clear all</button>
+                        </div>
+                        <div id="filesContainer" class="file-items"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <div class="action-settings">
+                    <label for="strictnessSelect" class="select-label">Strictness:</label>
+                    <select id="strictnessSelect" class="form-select">
+                        <option value="standard" selected>Standard (Balanced)</option>
+                        <option value="lenient">Lenient (Generous partial credit)</option>
+                        <option value="strict">Strict (Demands exact technical terms)</option>
+                    </select>
+                </div>
+                <button type="button" id="btnEvaluate" class="btn-primary btn-large">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Check Assignments
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingCard" class="card loading-card" style="display:none">
+                <div class="spinner"></div>
+                <h3 id="loadingTitle">Evaluating Assignments...</h3>
+                <p id="loadingSubtitle">Transcribing student handwriting and scoring against master key</p>
+            </div>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-section" style="display:none">
+                <div class="results-header">
+                    <h2>Evaluation Results</h2>
+                    <button type="button" id="btnExportCSV" class="btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Report (CSV)
+                    </button>
+                </div>
+
+                <!-- Summary Metrics -->
+                <div class="summary-metrics">
+                    <div class="metric-box">
+                        <span class="metric-title">Assignments Evaluated</span>
+                        <span class="metric-num" id="metricTotal">0</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-title">Class Average</span>
+                        <span class="metric-num" id="metricAverage">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-title">Average AI Confidence</span>
+                        <span class="metric-num" id="metricConfidence">--%</span>
+                    </div>
+                    <div class="metric-box" id="metricReviewBox">
+                        <span class="metric-title">Needs Manual Review</span>
+                        <span class="metric-num" id="metricReviewCount">0</span>
                     </div>
                 </div>
 
-                <!-- Evaluation State: Processing / Loading -->
-                <div id="processingCard" class="card processing-card" style="display:none">
-                    <div class="spinner-ring"></div>
-                    <h3 id="processingTitle">Analyzing Handwritten Submissions...</h3>
-                    <p id="processingDetail" class="processing-subtitle">Transcribing handwriting and cross-referencing master rubrics...</p>
-                    <div class="progress-bar-container">
-                        <div id="evaluationProgressBar" class="progress-bar-fill"></div>
-                    </div>
-                </div>
-
-                <!-- Evaluation State: Results Dashboard -->
-                <div id="resultsDashboard" style="display:none">
-                    <!-- Top Metrics Overview -->
-                    <div class="analytics-strip">
-                        <div class="metric-card">
-                            <span class="metric-label">Class Average</span>
-                            <div class="metric-value-row">
-                                <span class="metric-value" id="metricClassAvg">--</span>
-                                <span class="metric-badge" id="metricClassPct">--%</span>
-                            </div>
-                        </div>
-
-                        <div class="metric-card">
-                            <span class="metric-label">AI Checking Confidence</span>
-                            <div class="metric-value-row">
-                                <span class="metric-value" id="metricAvgConf">--%</span>
-                                <span class="metric-badge conf-badge" id="metricConfQuality">High</span>
-                            </div>
-                        </div>
-
-                        <div class="metric-card">
-                            <span class="metric-label">Submissions Evaluated</span>
-                            <div class="metric-value-row">
-                                <span class="metric-value" id="metricTotalSubs">0</span>
-                                <span class="metric-sub" id="metricProcTime">in 0.0s</span>
-                            </div>
-                        </div>
-
-                        <div class="metric-card alert-metric" id="metricFlaggedCard">
-                            <span class="metric-label">Teacher Review Flagged</span>
-                            <div class="metric-value-row">
-                                <span class="metric-value text-rose" id="metricFlaggedCount">0</span>
-                                <span class="metric-badge badge-rose" id="metricFlaggedPct">Low Conf</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Filter & Export Toolbar -->
-                    <div class="results-toolbar">
-                        <div class="filter-pills" id="filterPills">
-                            <button class="filter-btn active" data-filter="all">All Submissions (<span id="countAll">0</span>)</button>
-                            <button class="filter-btn" data-filter="verified">Verified (<span id="countVerified">0</span>)</button>
-                            <button class="filter-btn" data-filter="flagged">Needs Review (<span id="countFlagged">0</span>)</button>
-                        </div>
-
-                        <div class="toolbar-actions">
-                            <button id="btnExportCSV" class="btn btn-secondary btn-sm">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                <span>Export CSV</span>
-                            </button>
-                            <button id="btnExportJSON" class="btn btn-secondary btn-sm">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="16 18 22 12 16 6"></polyline>
-                                    <polyline points="8 6 2 12 8 18"></polyline>
-                                </svg>
-                                <span>Export JSON</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Student Evaluation Cards Container -->
-                    <div id="studentCardsContainer" class="student-cards-list">
-                        <!-- Populated dynamically with student evaluations -->
-                    </div>
+                <!-- Results Table -->
+                <div class="card table-card">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Student / File</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>AI Confidence</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Image Preview Modal -->
-    <div id="imageModal" class="modal-backdrop" style="display:none">
-        <div class="modal-dialog modal-lg">
+    <!-- Student Detail Modal -->
+    <div id="detailModal" class="modal-overlay" style="display:none">
+        <div class="modal-card">
             <div class="modal-header">
-                <h3 id="imageModalTitle">Handwritten Submission View</h3>
-                <button class="modal-close" id="btnCloseImageModal">&times;</button>
+                <div>
+                    <h3 id="modalStudentName">Student Evaluation</h3>
+                    <p id="modalStudentSub" class="modal-sub">Score and question-by-question breakdown</p>
+                </div>
+                <button type="button" id="btnCloseModal" class="btn-close">&times;</button>
             </div>
-            <div class="modal-body text-center">
-                <img id="modalFullImage" src="" alt="Handwritten Submission" class="modal-img-preview">
+            <div class="modal-body" id="modalBody">
+                <!-- Populated dynamically -->
             </div>
         </div>
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal-backdrop" style="display:none">
-        <div class="modal-dialog">
+    <div id="settingsModal" class="modal-overlay" style="display:none">
+        <div class="modal-card modal-sm">
             <div class="modal-header">
-                <h3>System Settings & Gemini API</h3>
-                <button class="modal-close" id="btnCloseSettings">&times;</button>
+                <h3>Settings</h3>
+                <button type="button" id="btnCloseSettings" class="btn-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label" for="settingApiKey">Gemini API Key</label>
-                    <div class="input-with-button">
-                        <input type="password" id="settingApiKey" class="form-input" placeholder="AIzaSy...">
-                        <button id="btnTestApiKey" class="btn btn-secondary">Test Connection</button>
-                    </div>
-                    <span class="form-helper">Key is saved securely to your local <code>.env</code> file. Get a free key at <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Google AI Studio</a>.</span>
-                    <div id="apiKeyTestStatus" class="test-feedback" style="display:none"></div>
+                    <label for="settingApiKey" class="form-label">Gemini API Key</label>
+                    <input type="password" id="settingApiKey" class="form-input" placeholder="AIzaSy...">
+                    <span class="form-hint">Stored in local <code>.env</code> file.</span>
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label" for="settingModel">Vision Model</label>
-                    <select id="settingModel" class="form-select">
-                        <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Recommended: Ultra-fast & High Accuracy)</option>
-                        <option value="gemini-2.0-flash">gemini-2.0-flash (Fast multimodal)</option>
-                        <option value="gemini-1.5-flash">gemini-1.5-flash (Standard)</option>
-                    </select>
+                    <label for="settingModel" class="form-label">Model</label>
+                    <input type="text" id="settingModel" class="form-input" value="gemini-3.5-flash-lite">
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label" for="settingThreshold">Manual Review Threshold (%)</label>
-                    <input type="number" id="settingThreshold" class="form-input" min="30" max="95" value="70">
-                    <span class="form-helper">Submissions with confidence score below this threshold will be flagged for teacher verification.</span>
+                    <label for="settingThreshold" class="form-label">Review Alert Threshold (%)</label>
+                    <input type="number" id="settingThreshold" class="form-input" value="70" min="40" max="95">
+                    <span class="form-hint">Flag submissions when confidence is below this percentage.</span>
                 </div>
+                <div id="settingsStatus" class="status-msg" style="display:none"></div>
             </div>
             <div class="modal-footer">
-                <button id="btnSaveSettings" class="btn btn-primary">Save Settings</button>
+                <button type="button" id="btnSaveSettings" class="btn-primary">Save Settings</button>
             </div>
         </div>
     </div>

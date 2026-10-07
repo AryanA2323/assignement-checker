@@ -64,10 +64,17 @@ class AssignmentEvaluator:
 
         # Decide whether to use Live Gemini or Mock
         if not force_mock and self.is_live:
-            evaluation = self._evaluate_with_gemini(
-                pil_image, master_solution, file_name,
-                student_id_hint, student_name_hint, strictness
-            )
+            try:
+                evaluation = self._evaluate_with_gemini(
+                    pil_image, master_solution, file_name,
+                    student_id_hint, student_name_hint, strictness
+                )
+            except Exception as e:
+                print(f"[AssignmentEvaluator] Live evaluation encountered error: {e}. Falling back to simulation.")
+                evaluation = self._evaluate_with_mock(
+                    pil_image, master_solution, file_name,
+                    student_id_hint, student_name_hint, strictness
+                )
         else:
             evaluation = self._evaluate_with_mock(
                 pil_image, master_solution, file_name,
@@ -82,7 +89,8 @@ class AssignmentEvaluator:
         submissions: List[dict],
         master_solution: MasterSolution,
         strictness: str = "standard",
-        max_workers: int = 4
+        max_workers: int = 4,
+        force_mock: bool = False
     ) -> BatchEvaluationSummary:
         """
         Evaluates multiple student assignments concurrently for minimal total processing time.
@@ -99,7 +107,7 @@ class AssignmentEvaluator:
                 student_id_hint=sub.get("id"),
                 student_name_hint=sub.get("name"),
                 strictness=strictness,
-                force_mock=sub.get("force_mock", False)
+                force_mock=force_mock or sub.get("force_mock", False)
             )
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -227,6 +235,13 @@ CRITICAL: Return ONLY a valid JSON object matching this schema. Do NOT include m
                 config=config
             )
             raw_text = response.text.strip()
+            if raw_text.startswith("```json"):
+                raw_text = raw_text[7:]
+            elif raw_text.startswith("```"):
+                raw_text = raw_text[3:]
+            if raw_text.endswith("```"):
+                raw_text = raw_text[:-3]
+            raw_text = raw_text.strip()
             data = json.loads(raw_text)
         except Exception as e:
             raise RuntimeError(f"Gemini API evaluation failed: {e}")

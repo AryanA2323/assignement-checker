@@ -51,24 +51,12 @@ def get_status():
         k = Config.GEMINI_API_KEY
         masked_key = k[:4] + "*" * (len(k) - 8) + k[-4:] if len(k) > 8 else "***"
 
-    demo_students = []
-    demo_students_dir = Config.DEMO_DIR / "students"
-    if demo_students_dir.exists():
-        for f in demo_students_dir.glob("*.png"):
-            demo_students.append({
-                "filename": f.name,
-                "url": f"/static/demo/{f.name}",
-                "name": f.stem.replace("student_", "").title(),
-                "size_kb": round(f.stat().st_size / 1024, 1)
-            })
-
     return jsonify({
         "has_api_key": has_key,
         "masked_key": masked_key,
         "model_name": Config.GEMINI_MODEL,
         "default_strictness": Config.DEFAULT_STRICTNESS,
-        "review_threshold": Config.MANUAL_REVIEW_THRESHOLD,
-        "demo_students": demo_students
+        "review_threshold": Config.MANUAL_REVIEW_THRESHOLD
     })
 
 @app.route("/api/settings", methods=["POST"])

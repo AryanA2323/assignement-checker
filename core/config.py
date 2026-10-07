@@ -9,8 +9,9 @@ ENV_FILE = BASE_DIR / ".env"
 load_dotenv(dotenv_path=ENV_FILE)
 
 class Config:
+    BASE_DIR = BASE_DIR
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
     DEFAULT_STRICTNESS = os.getenv("DEFAULT_STRICTNESS", "standard").strip().lower()
     MANUAL_REVIEW_THRESHOLD = float(os.getenv("MANUAL_REVIEW_THRESHOLD", "70.0"))
     
@@ -25,7 +26,8 @@ class Config:
     @classmethod
     def has_api_key(cls) -> bool:
         """Check if a Gemini API key is configured."""
-        return bool(cls.GEMINI_API_KEY and len(cls.GEMINI_API_KEY) > 10)
+        key = cls.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "").strip()
+        return bool(key and len(key) > 10)
 
     @classmethod
     def set_api_key(cls, key: str) -> None:
