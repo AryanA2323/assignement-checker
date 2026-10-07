@@ -312,23 +312,25 @@ CRITICAL: Return ONLY a valid JSON object matching this schema. Do NOT include m
             legibility = 52.0
             base_conf = 62.0
             transcriptions = {
-                "Q1": "Supervised learn is when data has labels. Machine learn learns patterns.",
-                "Q2": "Overfiting happens when train score is too high. Stop training maybe.",
-                "Q3": "CNN is convolution neural net for photos. RNN is recursive.",
-                "Q4": "Gradient descent minimizes error using math steps."
+                "Q1": "Attention = softmax(Q * K) * V. Scale factor sqrt(d_k) is used to scale down numbers. Attention is O(n^2) and RNN is O(n).",
+                "Q2": "Vanishing gradient is when gradients get small during backpropagation. Sigmoid makes gradients small. ReLU is better. Adam optimizer uses momentum and RMSprop gradient steps.",
+                "Q3": "Total samples = 10000. TP=85, TN=9730. Accuracy = (85 + 9730)/10000 = 98.15%. The model accuracy is 98.15% which is very high and sufficient for patients. Precision and Recall are around 50%.",
+                "Q4": "Data parallelism divides data. Model parallelism divides model. Ring all reduce connects GPUs in ring to reduce parameter server overload.",
+                "Q5": "L1 gives sparse weights. L2 gives small weights. Batch norm is for batches. Layer norm is for layers."
             }
         elif "bob" in stem or "medium" in stem or "average" in stem:
             # Bob: Decent student, average handwriting, missing a few keywords
             student_name = student_name_hint or "Bob Martinez"
             student_id = student_id_hint or "STU-1002"
-            target_ratio = 0.74 * strictness_factor
-            legibility = 82.0
-            base_conf = 88.0
+            target_ratio = 0.68 * strictness_factor
+            legibility = 80.0
+            base_conf = 84.0
             transcriptions = {
-                "Q1": "Supervised learning uses labeled training datasets to map inputs to outputs. Unsupervised learning finds hidden groupings or patterns in unlabeled datasets.",
-                "Q2": "Overfitting happens when a model learns noise in training data and fails on new test data. We can prevent it using regularization or dropout.",
-                "Q3": "CNNs use convolutional layers for spatial 2D data like images. RNNs process sequential data using internal loops.",
-                "Q4": "Gradient descent is an optimization algorithm that iteratively adjusts weights in the direction of steepest descent of the loss function."
+                "Q1": "Attention = softmax(Q * K^T / sqrt(d_k)) * V. Q and K are projections of sequence embeddings. We divide by sqrt(d_k) to prevent dot products from getting too big which slows down softmax. Self-attention has O(n^2 * d) complexity because we compute the full n x n attention matrix. RNN complexity is O(n * d^2) because of recurrence.",
+                "Q2": "Vanishing gradient is caused by repeatedly multiplying small derivatives in backprop chain rule. Sigmoid max derivative is 0.25, so for many layers gradients vanish. ReLU derivative is 1 so it solves it. Adam equations: m_t = beta_1 m_{t-1} + (1 - beta_1) g_t (momentum), v_t = beta_2 v_{t-1} + (1 - beta_2) g_t^2. We use bias correction m_hat and v_hat to fix zero initialization at start, then update theta.",
+                "Q3": "TP = 85, FN = 15, FP = 170, TN = 9730. Total = 10,000. Accuracy = (85 + 9730) / 10000 = 98.15%. Precision = TP / (TP + FN) = 85 / (85 + 15) = 85 / 100 = 85.0% [Confused with Recall]. Recall = TP / (TP + FP) = 85 / (85 + 170) = 85 / 255 = 33.3%. F1 = 2 * (0.85 * 0.333) / (0.85 + 0.333) = 0.566 / 1.183 = 47.8%. Accuracy is misleading because negative cases dominate. In hospital tests Recall is most important.",
+                "Q4": "Data Parallelism copies model on all workers and splits data batches. Pipeline Parallelism splits network layers across multiple GPUs in a line. Parameter Server is slow because the master server gets overwhelmed with gradient traffic. Ring AllReduce organizes GPUs in a circle ring so communication is shared across workers.",
+                "Q5": "L1 regularization forces weights to 0 because of absolute value penalty, while L2 shrinks them. Batch Norm normalizes along batch dimension, but depends heavily on having large batch size. Layer Norm normalizes across feature dimensions per sample, so it works better for Transformers."
             }
         else:
             # Alice (default): Excellent student, neat handwriting, high confidence
@@ -338,10 +340,11 @@ CRITICAL: Return ONLY a valid JSON object matching this schema. Do NOT include m
             legibility = 95.0
             base_conf = 96.0
             transcriptions = {
-                "Q1": "Supervised learning trains algorithms on labeled data with known ground truth targets to predict future outcomes. In contrast, unsupervised learning discovers inherent patterns, clusters, and structures in unlabeled datasets without explicit guidance.",
-                "Q2": "Overfitting occurs when a statistical model learns both underlying signals and random noise in the training set, causing high training accuracy but poor generalization on unseen validation data. Mitigations include L1/L2 regularization, early stopping, cross-validation, and data augmentation.",
-                "Q3": "CNN (Convolutional Neural Network) employs shared kernels and spatial hierarchies specifically designed for grid-like data such as images. RNN (Recurrent Neural Network) maintains hidden recurrent states to handle variable-length sequential time-series or linguistic data.",
-                "Q4": "Gradient descent is a first-order iterative optimization algorithm used to find local minima of a differentiable loss function by taking proportional steps negative to the gradient vector."
+                "Q1": "Attention(Q, K, V) = softmax((Q * K^T) / sqrt(d_k)) * V, where Q, K in R^(n x d_k), V in R^(n x d_v). Justification for 1/sqrt(d_k): Assume components of q and k are independent zero-mean unit-variance variables; then dot product has variance d_k. Large d_k pushes softmax into saturated regions with near-zero gradients. Dividing by sqrt(d_k) preserves unit variance. Complexity: Self-Attention is O(n^2 * d) per layer with O(1) sequential steps. RNN is O(n * d^2) with O(n) sequential steps.",
+                "Q2": "dL/dw_1 = (dL/da_L) * prod_{l=2}^L (da_l/da_{l-1}) * (da_1/dw_1). For Sigmoid, derivative sigma'(z) <= 0.25, causing exponential gradient decay (0.25)^L -> 0. ReLU derivative is 1 for z > 0, preventing vanishing gradient. Adam equations: m_t = beta_1 m_{t-1} + (1 - beta_1) g_t, v_t = beta_2 v_{t-1} + (1 - beta_2) g_t^2. Bias correction: m_hat_t = m_t / (1 - beta_1^t), v_hat_t = v_t / (1 - beta_2^t). Update: theta_{t+1} = theta_t - (alpha / (sqrt(v_hat_t) + eps)) * m_hat_t.",
+                "Q3": "Total = 10,000 patients. Accuracy = (85 + 9730)/10000 = 98.15%. Precision = 85/(85 + 170) = 85/255 = 33.33%. Recall = 85/(85 + 15) = 85/100 = 85.00%. F1-Score = 2 * (P * R)/(P + R) = 2*(0.3333 * 0.85)/(0.3333 + 0.85) = 47.88%. Accuracy is misleading because a dummy all-negative model achieves 99.0% accuracy while detecting 0 patients. Recall is paramount in medical screening because False Negatives mean untreated patients (fatal risk).",
+                "Q4": "Data Parallelism duplicates model and splits mini-batch across GPUs; gradients averaged via AllReduce. Tensor Parallelism partitions weight matrices intra-layer (Megatron-LM), while Pipeline Parallelism partitions layers sequentially with micro-batch schedules (GPipe). Parameter Server has O(P * M) central bottleneck. Ring-AllReduce splits buffer into P chunks, sending 2 * ((P-1)/P) * M data across Scatter-Reduce and AllGather steps, remaining independent of worker count P.",
+                "Q5": "Geometry: L1 constraint ||w||_1 <= C forms a diamond with sharp corners on axes; expanding loss ellipses touch diamond vertices first, setting weights strictly to zero (sparsity). L2 constraint is a smooth circle. Batch Norm normalizes across batch dimension N for each channel: depends on batch size, fails for RNNs. Layer Norm normalizes across features C for each individual token: independent of batch size, ideal for Transformers."
             }
 
         q_evals: List[QuestionEvaluation] = []

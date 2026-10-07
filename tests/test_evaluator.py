@@ -49,7 +49,7 @@ def test_evaluator_mock_charlie_flagged(sample_master):
     )
 
     assert result.student_name == "Charlie Davis"
-    assert result.total_score < 12.0
+    assert result.total_score < 25.0
     assert result.overall_confidence_score < 70.0
     assert result.requires_manual_review is True
     assert len(result.review_reasons) > 0

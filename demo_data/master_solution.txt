@@ -1,23 +1,28 @@
-Title: Midterm Assignment: Core Principles of Machine Learning
-Subject: Computer Science & Artificial Intelligence
-Total Marks: 20
+Title: Advanced Machine Learning & Deep Learning Systems: Comprehensive Exam
+Subject: CS 482 / AI 601: Advanced Artificial Intelligence & Distributed ML
+Total Marks: 50
 
-Q1: Explain the difference between Supervised and Unsupervised Learning with examples.
-Marks: 5
-Answer: Supervised learning uses labeled training datasets to map inputs to ground truth targets (e.g., spam detection, price prediction). Unsupervised learning operates on unlabeled data to discover hidden patterns and groupings (e.g., k-means clustering, PCA).
-Keys: labeled data vs unlabeled data, ground truth supervision, classification/regression vs clustering, examples
+Q1: (a) Derive and explain the Scaled Dot-Product Attention mechanism used in Transformers. Why is the scaling factor 1/sqrt(d_k) essential? (b) Compare computational complexity per layer of Self-Attention vs RNN with sequence length n and dimension d.
+Marks: 10
+Answer: Attention(Q,K,V) = softmax(QK^T / sqrt(d_k))V. The dot product variance scales as d_k; for large d_k, logits grow large pushing softmax into regions with vanishing gradients. Dividing by sqrt(d_k) restores unit variance. Complexity: Self-Attention is O(n^2 * d) with O(1) sequential steps (fully parallel), whereas RNN is O(n * d^2) with O(n) sequential path length.
+Keys: Attention formula Attention(Q, K, V) = softmax(QK^T / sqrt(d_k))V, variance scales with d_k causing softmax gradient saturation, Self-Attention O(n^2*d) vs RNN O(n*d^2)
 
-Q2: What is overfitting in machine learning, and mention two techniques to prevent it?
-Marks: 5
-Answer: Overfitting occurs when a model memorizes noise in the training set and fails to generalize on unseen test data. Prevention techniques include L1/L2 regularization or Dropout, and early stopping or cross-validation.
-Keys: poor generalization on unseen test data, training noise, regularization, early stopping
+Q2: (a) Explain Vanishing and Exploding Gradients via chain rule. Contrast Sigmoid with ReLU. (b) Write parameter update equations for Adam optimizer including first/second moments and bias correction.
+Marks: 10
+Answer: By chain rule dL/dw_1 = prod(da_l/da_{l-1}) * da_1/dw_1. For Sigmoid, max derivative is 0.25, causing exponential decay of gradients across layers. ReLU has derivative 1 for positive inputs, eliminating vanishing gradient. Adam updates: m_t = beta_1*m_{t-1} + (1-beta_1)*g_t, v_t = beta_2*v_{t-1} + (1-beta_2)*g_t^2. Bias-corrected: m_hat = m_t/(1-beta_1^t), v_hat = v_t/(1-beta_2^t). Weight update: theta = theta - alpha * m_hat / (sqrt(v_hat) + epsilon).
+Keys: Chain rule layer Jacobian product, Sigmoid derivative <= 0.25 causing exponential gradient decay, ReLU derivative 1, Adam m_t and v_t moments, bias correction (1-beta^t)
 
-Q3: Compare CNN (Convolutional Neural Networks) and RNN (Recurrent Neural Networks) in terms of structure and use case.
-Marks: 5
-Answer: CNNs use spatial convolution filters to process grid-like visual data such as images. RNNs use persistent recurrent loops and internal memory to process sequential data such as text and time-series.
-Keys: CNN spatial convolution filters for images, RNN recurrent feedback loops for sequential data
+Q3: A medical AI test set has 10,000 records (100 positive, 9900 negative). Confusion matrix: TP=85, FN=15, FP=170, TN=9730. (a) Calculate Accuracy, Precision, Recall, and F1-Score. (b) Explain why Accuracy is misleading and which metric is paramount for medical diagnosis.
+Marks: 10
+Answer: Accuracy = (85+9730)/10000 = 9815/10000 = 98.15%. Precision = 85/(85+170) = 85/255 = 33.33%. Recall = 85/(85+15) = 85/100 = 85.00%. F1-Score = 2*(0.3333*0.85)/(0.3333+0.85) = 47.88%. Accuracy is misleading because a dummy classifier predicting all negative achieves 99% accuracy while detecting zero diseased patients. Recall is critical because False Negatives mean infected patients go untreated.
+Keys: Accuracy 98.15%, Precision 33.33%, Recall 85.00%, F1 47.88%, class imbalance critique, Recall is paramount to minimize fatal False Negatives
 
-Q4: Define Gradient Descent and explain the role of the learning rate parameter.
-Marks: 5
-Answer: Gradient descent is an optimization algorithm that iteratively minimizes a loss function by stepping in the direction opposite to the gradient. The learning rate dictates the step size: too large causes divergence/overshoot, while too small causes slow convergence.
-Keys: minimize loss function, step negative to gradient, learning rate controls step size, overshoot vs slow convergence
+Q4: (a) Compare Data Parallelism and Model Parallelism (Tensor vs Pipeline). (b) Explain the Ring-AllReduce algorithm and derive its communication volume compared to a Parameter Server with P workers.
+Marks: 10
+Answer: Data Parallelism replicates the model and partitions mini-batches. Model Parallelism partitions weights: Tensor Parallelism splits individual weight matrices intra-layer across GPUs, while Pipeline Parallelism partitions layers sequentially with micro-batch pipelining. Parameter Server has O(P*M) bottleneck at central server. Ring-AllReduce splits buffer into P chunks; each worker transmits 2*(P-1)/P * M data across Scatter-Reduce and AllGather phases, remaining independent of worker count P.
+Keys: Data Parallelism vs Tensor Parallelism vs Pipeline Parallelism, Parameter Server O(P*M) bottleneck, Ring-AllReduce 2*(P-1)/P * M independent of P
+
+Q5: (a) Geometrically explain why L1 regularization induces sparsity while L2 does not. (b) Differentiate Batch Normalization from Layer Normalization in terms of axis, batch size dependency, and suitability for sequential models.
+Marks: 10
+Answer: L1 constraint region is a diamond with sharp vertices on coordinate axes; expanding elliptical loss contours touch diamond corners first, setting weights strictly to zero. L2 constraint is a smooth circle where tangent contact on axes is measure zero. Batch Norm normalizes across batch dimension N for each feature channel, depending on batch size N. Layer Norm normalizes across all features C for a single sample, independent of batch size, making it ideal for variable-length sequential models like Transformers.
+Keys: L1 diamond contour corner intersection induces parameter sparsity, L2 smooth circle contour, Batch Norm across batch dimension N, Layer Norm across feature channels C independent of batch size
