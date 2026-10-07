@@ -1,0 +1,123 @@
+# HandwriteAI — Automated Assignment Checker & Confidence Evaluator
+
+> **Problem Statement Solved:**
+> *"Manual evaluation of handwritten assignments is time-consuming, inconsistent, and difficult to scale for large numbers of students. Teachers need to spend significant time reading answers and checking whether they are correct and relevant."*
+
+**HandwriteAI** is a minimal, portable, and fast solution designed to automate the checking of student handwritten assignments against an official master solution key. It transcribes handwritten answers, scores each question semantically against the master rubric, computes an **Accuracy Confidence Score (0–100%)**, and automatically flags low-confidence or illegible submissions for teacher review.
+
+---
+
+## 🌟 Key Features
+
+- **End-to-End Multimodal Vision Evaluation**: Utilizes `gemini-2.5-flash` for OCR and semantic grading in a single pass (< 2 seconds per paper).
+- **Minimal Dependencies & 100% Portability**: Uses only lightweight Python libraries (`Flask`, `google-genai`, `Pillow`, `pydantic`). No heavy CUDA/PyTorch or external C++ OCR binaries required.
+- **Accurate Confidence Scoring**: Aggregates handwriting legibility, transcription certainty, and rubric alignment into an overall confidence metric (0–100%).
+- **Teacher Review Flagging**: Submissions with confidence below threshold (default: 70%) or poor legibility (< 55%) are flagged with explicit audit reasons.
+- **Demo Dataset Built-In**:
+  - **Master Solution**: 4 multi-part questions on Artificial Intelligence and Machine Learning with scoring rubrics and key concepts.
+  - **Student 1 (Alice Johnson)**: High score (~94%), neat handwriting, high confidence (95%).
+  - **Student 2 (Bob Martinez)**: Average score (~74%), casual handwriting, moderate confidence (87%).
+  - **Student 3 (Charlie Davis)**: Low score (~40%), messy/irregular handwriting, low confidence (61%) & flagged for teacher review.
+- **Works with Real-World Data**: Supports any phone camera photo (`.jpg`, `.png`, `.webp`) and multi-page student `.pdf` documents.
+- **Dual Interface**:
+  - **Modern Web Dashboard**: Glassmorphic UI with real-time circular confidence gauges, side-by-side student work vs. transcription, and CSV/JSON export.
+  - **Headless CLI Tool**: For batch scripts and headless workflows.
+- **Offline / Mock Engine**: Instant out-of-the-box demonstration and 100% unit-tested even without an API key.
+
+---
+
+## 🚀 Quickstart
+
+### 1. Requirements & Installation
+Ensure you have Python (3.10+) installed. Then install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Configure Gemini API Key (Optional for live AI)
+If you have a Gemini API key:
+- Either copy `.env.example` to `.env` and set:
+  ```env
+  GEMINI_API_KEY=your_gemini_api_key_here
+  GEMINI_MODEL=gemini-2.5-flash
+  DEFAULT_STRICTNESS=standard
+  MANUAL_REVIEW_THRESHOLD=70
+  ```
+- Or enter it directly in the **Settings modal** within the Web Dashboard!
+
+*(Note: If no API key is provided, the system automatically runs in Mock Simulator Mode for instant offline demonstration).*
+
+---
+
+## 🖥️ Running the Application
+
+### Option A: Interactive Web Dashboard
+Run:
+```bash
+python app.py
+```
+Open your browser at: **`http://127.0.0.1:5050`**
+
+From the dashboard you can:
+1. Choose the preloaded demo Master Solution or upload your own.
+2. Select the 3 demo students or upload your own photos/PDFs.
+3. Select grading strictness (`Lenient`, `Standard`, `Strict`).
+4. Click **"Run AI Assignment Checking"**.
+5. View real-time scores, circular confidence gauges, transcribed answers, and export results to CSV or JSON!
+
+### Option B: Command Line Interface (CLI)
+Run batch evaluation directly from your terminal:
+```bash
+# Evaluate demo students with demo master
+python cli.py
+
+# Evaluate custom folder with custom master
+python cli.py --master path/to/master.json --students path/to/student_images/ --output reports/results.csv
+
+# With custom API key or forced mock
+python cli.py --api-key YOUR_KEY --strictness strict
+```
+
+---
+
+## 🧪 Automated Testing
+
+Run the full automated test suite (15 unit and integration tests):
+```bash
+python -m pytest -v
+```
+All tests validate models, image optimization, confidence heuristics, batch evaluation, CLI execution, and Flask API endpoints.
+
+---
+
+## 📁 Project Architecture
+
+```
+assignement checker/
+├── app.py                     # Flask web server & REST API
+├── cli.py                     # Terminal CLI runner
+├── requirements.txt           # Minimal dependencies
+├── .env.example               # Environment variables template
+├── core/
+│   ├── config.py              # Settings & API key management
+│   ├── models.py              # Pydantic schemas (MasterSolution, StudentEvaluation)
+│   ├── confidence.py          # Confidence calculation heuristics & review thresholds
+│   ├── evaluator.py           # Gemini multimodal vision evaluator & mock fallback
+│   └── utils.py               # Image optimization, PDF extraction & CSV export
+├── demo_data/
+│   ├── master_solution.json   # Comprehensive demo master answer key
+│   ├── master_solution.txt    # Text format master key
+│   └── students/              # Rendered realistic handwritten student papers
+│       ├── student_alice.png  # Alice (high score, neat cursive)
+│       ├── student_bob.png    # Bob (average score, casual pen)
+│       └── student_charlie.png# Charlie (low score, messy paper)
+├── scripts/
+│   └── generate_demo_data.py  # Script generating synthetic realistic handwritten sheets
+├── templates/
+│   └── index.html             # Web dashboard
+├── static/
+│   ├── css/style.css          # Glassmorphic responsive dark theme
+│   ├── js/app.js              # Client dashboard interactivity & gauges
+│   └── demo/                  # Demo images for browser preview
+└── tests/                     # 15 automated test cases
+```

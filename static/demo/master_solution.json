@@ -1,0 +1,75 @@
+{
+  "title": "Midterm Assignment: Core Principles of Machine Learning",
+  "subject": "Computer Science & Artificial Intelligence",
+  "total_marks": 20.0,
+  "instructions": "Evaluate based on conceptual understanding, correct definitions, and relevant technical examples. Handwriting clarity and notation correctness factor into evaluation confidence.",
+  "questions": [
+    {
+      "question_id": "Q1",
+      "question_text": "Explain the difference between Supervised and Unsupervised Learning with examples.",
+      "max_marks": 5.0,
+      "model_answer": "Supervised learning trains models on labeled datasets with known ground truth targets to map input features to predefined outputs (e.g., classification, regression such as email spam detection or house price prediction). In contrast, unsupervised learning operates on unlabeled data without explicit supervision to discover hidden patterns, underlying groupings, or data representations (e.g., k-means customer clustering, PCA dimensionality reduction).",
+      "key_concepts": [
+        "labeled data vs unlabeled data",
+        "ground truth supervision",
+        "classification / regression vs clustering",
+        "concrete examples (e.g. spam detection, k-means)"
+      ],
+      "grading_rubric": {
+        "full_marks": "Clearly contrasts labeled vs unlabeled data and provides valid examples for both paradigms.",
+        "partial_marks": "Explains difference but omits examples, or provides vague definitions.",
+        "minimal_marks": "Mentions one category without distinguishing contrast."
+      }
+    },
+    {
+      "question_id": "Q2",
+      "question_text": "What is overfitting in machine learning, and mention two techniques to prevent it?",
+      "max_marks": 5.0,
+      "model_answer": "Overfitting occurs when a statistical or neural model learns the specific noise, fluctuations, and details of the training dataset too closely, leading to near-perfect training accuracy but poor generalization performance on unseen test/validation data. Two primary prevention techniques are: (1) Regularization (L1 Lasso, L2 Ridge, or Dropout in neural networks) which penalizes complex weights; and (2) Early stopping or K-fold Cross-Validation, which halts training before validation error begins to rise.",
+      "key_concepts": [
+        "poor generalization on unseen test data",
+        "memorization of training noise",
+        "regularization (L1/L2 or dropout)",
+        "early stopping or cross-validation"
+      ],
+      "grading_rubric": {
+        "full_marks": "Defines overfitting accurately (high train / low test performance) and specifies two valid prevention methods.",
+        "partial_marks": "Defines overfitting correctly but mentions only one mitigation technique or vague solutions.",
+        "minimal_marks": "Confuses overfitting with underfitting or gives incorrect solutions."
+      }
+    },
+    {
+      "question_id": "Q3",
+      "question_text": "Compare CNN (Convolutional Neural Networks) and RNN (Recurrent Neural Networks) in terms of structure and use case.",
+      "max_marks": 5.0,
+      "model_answer": "CNNs utilize spatial convolution kernels, shared filter weights, and pooling layers designed to capture translation-invariant spatial patterns; they are primarily used for grid-structured data like 2D/3D images and video recognition. RNNs utilize internal feedback loops and persistent hidden state vectors to model temporal dependencies across sequential data; they are primarily applied to time-series forecasting, audio signals, and natural language processing.",
+      "key_concepts": [
+        "CNN uses convolution filters / spatial kernels for 2D/3D image data",
+        "RNN uses feedback loops / recurrent hidden states for sequential / time-series data",
+        "spatial hierarchy vs temporal dependencies"
+      ],
+      "grading_rubric": {
+        "full_marks": "Accurately contrasts spatial architecture vs sequential memory and states correct use cases for both.",
+        "partial_marks": "Correctly identifies use cases (images vs sequences) but lacks structural architecture comparison.",
+        "minimal_marks": "Only defines one network type or confuses architectures."
+      }
+    },
+    {
+      "question_id": "Q4",
+      "question_text": "Define Gradient Descent and explain the role of the learning rate parameter.",
+      "max_marks": 5.0,
+      "model_answer": "Gradient Descent is a first-order iterative optimization algorithm used to minimize a differentiable cost or loss function by iteratively updating model parameters in the direction opposite to the gradient vector of the loss. The learning rate (alpha) controls the step size taken at each iteration: if the learning rate is too large, optimization can overshoot or diverge; if it is too small, convergence becomes extremely slow or gets trapped in suboptimal plateaus.",
+      "key_concepts": [
+        "iterative optimization algorithm to minimize loss",
+        "parameter updates negative to gradient direction",
+        "learning rate controls step size",
+        "trade-off: too large causes overshoot/divergence, too small causes slow convergence"
+      ],
+      "grading_rubric": {
+        "full_marks": "Defines algorithm, gradient update mechanism, and explicitly contrasts consequences of high vs low learning rates.",
+        "partial_marks": "Mentions minimizing loss but fails to explain how learning rate impacts convergence.",
+        "minimal_marks": "Vague or mathematically incorrect definition."
+      }
+    }
+  ]
+}

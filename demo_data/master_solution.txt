@@ -1,0 +1,23 @@
+Title: Midterm Assignment: Core Principles of Machine Learning
+Subject: Computer Science & Artificial Intelligence
+Total Marks: 20
+
+Q1: Explain the difference between Supervised and Unsupervised Learning with examples.
+Marks: 5
+Answer: Supervised learning uses labeled training datasets to map inputs to ground truth targets (e.g., spam detection, price prediction). Unsupervised learning operates on unlabeled data to discover hidden patterns and groupings (e.g., k-means clustering, PCA).
+Keys: labeled data vs unlabeled data, ground truth supervision, classification/regression vs clustering, examples
+
+Q2: What is overfitting in machine learning, and mention two techniques to prevent it?
+Marks: 5
+Answer: Overfitting occurs when a model memorizes noise in the training set and fails to generalize on unseen test data. Prevention techniques include L1/L2 regularization or Dropout, and early stopping or cross-validation.
+Keys: poor generalization on unseen test data, training noise, regularization, early stopping
+
+Q3: Compare CNN (Convolutional Neural Networks) and RNN (Recurrent Neural Networks) in terms of structure and use case.
+Marks: 5
+Answer: CNNs use spatial convolution filters to process grid-like visual data such as images. RNNs use persistent recurrent loops and internal memory to process sequential data such as text and time-series.
+Keys: CNN spatial convolution filters for images, RNN recurrent feedback loops for sequential data
+
+Q4: Define Gradient Descent and explain the role of the learning rate parameter.
+Marks: 5
+Answer: Gradient descent is an optimization algorithm that iteratively minimizes a loss function by stepping in the direction opposite to the gradient. The learning rate dictates the step size: too large causes divergence/overshoot, while too small causes slow convergence.
+Keys: minimize loss function, step negative to gradient, learning rate controls step size, overshoot vs slow convergence
