@@ -129,10 +129,14 @@ def evaluate():
     force_mock = request.form.get("force_mock", "false").lower() == "true"
     use_demo_master = request.form.get("use_demo_master", "false").lower() == "true"
     use_demo_students = request.form.get("use_demo_students", "false").lower() == "true"
+    evaluation_mode = request.form.get("evaluation_mode", "master_solution").lower()
+    subject_or_topic = request.form.get("subject_or_topic", "").strip() or None
 
-    # 1. Resolve Master Solution
+    # 1. Resolve Master Solution (Not required if evaluation_mode == 'ai_direct')
     master_solution = None
-    if use_demo_master:
+    if evaluation_mode == "ai_direct":
+        master_solution = None
+    elif use_demo_master:
         master_path = Config.DEMO_DIR / "master_solution.json"
         master_solution = parse_master_solution_file(master_path)
     elif "master_file" in request.files and request.files["master_file"].filename:
@@ -144,12 +148,12 @@ def evaluate():
     elif request.form.get("master_text"):
         master_solution = parse_text_master_solution(request.form.get("master_text"))
     else:
-        # Default fallback to demo master
+        # Default fallback to demo master if in master_solution mode
         master_path = Config.DEMO_DIR / "master_solution.json"
         if master_path.exists():
             master_solution = parse_master_solution_file(master_path)
         else:
-            return jsonify({"error": "No master solution provided."}), 400
+            return jsonify({"error": "No master solution provided for Master Solution mode."}), 400
 
     # 2. Resolve Student Submissions
     submissions = []
@@ -206,7 +210,9 @@ def evaluate():
         batch_result = evaluator.evaluate_batch(
             submissions=submissions,
             master_solution=master_solution,
-            strictness=strictness
+            strictness=strictness,
+            evaluation_mode=evaluation_mode,
+            subject_or_topic=subject_or_topic
         )
         
         # Attach preview URLs to results
@@ -224,6 +230,7 @@ def evaluate():
         output_data["results"] = result_dicts
         output_data["is_live_gemini"] = evaluator.is_live and not force_mock
         output_data["model_used"] = evaluator.model_name if (evaluator.is_live and not force_mock) else "Mock Engine"
+        output_data["evaluation_mode"] = evaluation_mode
 
         LAST_EVALUATION = batch_result
         return jsonify(output_data)

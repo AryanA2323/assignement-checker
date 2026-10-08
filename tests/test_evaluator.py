@@ -65,3 +65,22 @@ def test_batch_evaluation(sample_master):
     assert batch.total_submissions == 3
     assert batch.flagged_for_review_count == 1
     assert batch.class_average_score > 0
+
+def test_ai_direct_evaluation_without_master():
+    evaluator = AssignmentEvaluator()
+    alice_img = Path("demo_data/students/student_alice.png")
+    
+    result = evaluator.evaluate_submission(
+        image_or_path=alice_img,
+        master_solution=None,
+        file_name="student_alice.png",
+        force_mock=True,
+        evaluation_mode="ai_direct",
+        subject_or_topic="Deep Learning"
+    )
+    
+    assert result.student_name == "Alice Johnson"
+    assert result.evaluation_mode == "ai_direct"
+    assert result.total_score > 0
+    assert len(result.question_evaluations) > 0
+    assert "Google" in result.question_evaluations[0].teacher_rationale

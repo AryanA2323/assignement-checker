@@ -53,6 +53,7 @@ class StudentEvaluation(BaseModel):
     review_reasons: List[str] = Field(default_factory=list, description="Reasons why manual review is recommended")
     question_evaluations: List[QuestionEvaluation] = Field(default_factory=list)
     summary_feedback: str = Field("", description="Overall teacher summary feedback for the student")
+    evaluation_mode: str = Field("master_solution", description="Evaluation mode: 'master_solution' or 'ai_direct'")
     evaluation_time_seconds: float = Field(0.0, description="Processing duration in seconds")
     timestamp: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -64,5 +65,6 @@ class BatchEvaluationSummary(BaseModel):
     class_average_percentage: float
     average_confidence: float
     flagged_for_review_count: int
+    evaluation_mode: str = Field("master_solution", description="Evaluation mode: 'master_solution' or 'ai_direct'")
     processing_time_total_seconds: float
     results: List[StudentEvaluation]

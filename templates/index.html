@@ -47,6 +47,7 @@
                     <div class="mode-switch">
                         <button type="button" class="switch-btn active" id="btnModeUpload">Upload File</button>
                         <button type="button" class="switch-btn" id="btnModePaste">Paste Text</button>
+                        <button type="button" class="switch-btn switch-btn-ai" id="btnModeAIDirect">✨ Check with AI</button>
                     </div>
 
                     <!-- Mode: File Upload -->
@@ -67,6 +68,27 @@
                     <!-- Mode: Paste Text -->
                     <div id="masterTextSection" class="text-section" style="display:none">
                         <textarea id="masterTextInput" class="code-textarea" rows="6" placeholder="Paste your question and answer key here:&#10;&#10;Q1: Explain Supervised Learning with examples.&#10;Marks: 5&#10;Answer: Supervised learning maps inputs to labeled outputs...&#10;&#10;Q2: What is overfitting?&#10;Marks: 5&#10;Answer: Overfitting occurs when the model learns training noise..."></textarea>
+                    </div>
+
+                    <!-- Mode: Direct AI Evaluation (No Master Solution) -->
+                    <div id="masterAIDirectSection" class="ai-direct-section" style="display:none">
+                        <div class="ai-direct-banner">
+                            <div class="ai-direct-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                            </div>
+                            <div class="ai-direct-content">
+                                <h3>Autonomous AI Evaluation</h3>
+                                <p><strong>No master solution required!</strong> Gemini AI reads students' handwriting and evaluates factual correctness directly against real-world <strong>Google data & academic knowledge</strong>.</p>
+                            </div>
+                        </div>
+                        <div class="ai-direct-options">
+                            <label for="subjectTopicInput" class="select-label">Subject / Topic (Optional):</label>
+                            <input type="text" id="subjectTopicInput" class="form-input" placeholder="e.g. Distributed Systems, Machine Learning, Organic Chemistry...">
+                        </div>
                     </div>
                 </section>
 

@@ -178,7 +178,7 @@ def export_batch_to_csv(batch: BatchEvaluationSummary, output_path: Union[str, P
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "Student ID", "Student Name", "File", "Total Score", "Max Marks",
+            "Student ID", "Student Name", "File", "Evaluation Mode", "Total Score", "Max Marks",
             "Percentage (%)", "Confidence Score (%)", "Legibility (%)",
             "Needs Manual Review", "Review Notes", "Feedback Summary"
         ])
@@ -187,6 +187,7 @@ def export_batch_to_csv(batch: BatchEvaluationSummary, output_path: Union[str, P
                 s.student_id,
                 s.student_name,
                 s.file_name,
+                "Direct AI (Google Data)" if s.evaluation_mode == "ai_direct" else "Master Solution",
                 s.total_score,
                 s.max_possible_score,
                 f"{s.percentage:.1f}",

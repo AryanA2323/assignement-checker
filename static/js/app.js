@@ -14,8 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Master Solution
     const btnModeUpload = document.getElementById("btnModeUpload");
     const btnModePaste = document.getElementById("btnModePaste");
+    const btnModeAIDirect = document.getElementById("btnModeAIDirect");
     const masterFileSection = document.getElementById("masterFileSection");
     const masterTextSection = document.getElementById("masterTextSection");
+    const masterAIDirectSection = document.getElementById("masterAIDirectSection");
+    const subjectTopicInput = document.getElementById("subjectTopicInput");
     const masterDropZone = document.getElementById("masterDropZone");
     const masterFileInput = document.getElementById("masterFileInput");
     const masterFileInfo = document.getElementById("masterFileInfo");
@@ -84,17 +87,53 @@ document.addEventListener("DOMContentLoaded", () => {
             state.masterMode = "upload";
             btnModeUpload.classList.add("active");
             btnModePaste.classList.remove("active");
+            if (btnModeAIDirect) btnModeAIDirect.classList.remove("active");
             masterFileSection.style.display = "block";
             masterTextSection.style.display = "none";
+            if (masterAIDirectSection) masterAIDirectSection.style.display = "none";
+            btnEvaluate.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Run AI Assignment Checking
+            `;
         });
 
         btnModePaste.addEventListener("click", () => {
             state.masterMode = "paste";
             btnModePaste.classList.add("active");
             btnModeUpload.classList.remove("active");
+            if (btnModeAIDirect) btnModeAIDirect.classList.remove("active");
             masterFileSection.style.display = "none";
             masterTextSection.style.display = "block";
+            if (masterAIDirectSection) masterAIDirectSection.style.display = "none";
+            btnEvaluate.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Run AI Assignment Checking
+            `;
         });
+
+        if (btnModeAIDirect) {
+            btnModeAIDirect.addEventListener("click", () => {
+                state.masterMode = "ai_direct";
+                btnModeAIDirect.classList.add("active");
+                btnModeUpload.classList.remove("active");
+                btnModePaste.classList.remove("active");
+                masterFileSection.style.display = "none";
+                masterTextSection.style.display = "none";
+                if (masterAIDirectSection) masterAIDirectSection.style.display = "block";
+                btnEvaluate.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    ✨ Run Direct AI Evaluation (Google Data)
+                `;
+            });
+        }
     }
 
     // 3. Setup Drag & Drop Handlers
@@ -197,7 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnEvaluate.addEventListener("click", async () => {
         // Validation
         if (state.masterMode === "upload" && !state.masterFile) {
-            alert("Please select or drop a Master Solution file, or switch to 'Paste Text'.");
+            alert("Please select or drop a Master Solution file, or switch to '✨ Check with AI'.");
             return;
         }
         if (state.masterMode === "paste" && !masterTextInput.value.trim()) {
@@ -212,11 +251,15 @@ document.addEventListener("DOMContentLoaded", () => {
         // Prepare request
         const formData = new FormData();
         formData.append("strictness", strictnessSelect.value);
+        formData.append("evaluation_mode", state.masterMode === "ai_direct" ? "ai_direct" : "master_solution");
 
         if (state.masterMode === "upload") {
             formData.append("master_file", state.masterFile);
-        } else {
+        } else if (state.masterMode === "paste") {
             formData.append("master_text", masterTextInput.value.trim());
+        } else if (state.masterMode === "ai_direct") {
+            const subject = subjectTopicInput ? subjectTopicInput.value.trim() : "";
+            if (subject) formData.append("subject_or_topic", subject);
         }
 
         state.studentFiles.forEach(file => {
@@ -283,9 +326,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 ? `<span class="status-badge status-flagged">Needs Review</span>`
                 : `<span class="status-badge status-verified">Verified</span>`;
 
+            const modeBadge = (student.evaluation_mode === "ai_direct" || batch.evaluation_mode === "ai_direct")
+                ? `<span class="mode-badge-ai">✨ Google Data</span>`
+                : "";
+
             row.innerHTML = `
                 <td>
-                    <div class="student-name-cell">${escapeHtml(student.student_name)}</div>
+                    <div class="student-name-cell">${escapeHtml(student.student_name)} ${modeBadge}</div>
                     <div class="student-sub-cell">${escapeHtml(student.file_name)} &bull; ${escapeHtml(student.student_id)}</div>
                 </td>
                 <td class="score-cell">${student.total_score} / ${student.max_possible_score}</td>
@@ -311,7 +358,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 6. Student Detail Modal
     function showStudentDetail(student) {
         modalStudentName.textContent = student.student_name;
-        modalStudentSub.textContent = `${student.file_name} • Score: ${student.total_score}/${student.max_possible_score} (${student.percentage}%) • Confidence: ${student.overall_confidence_score}%`;
+        const modeInfo = (student.evaluation_mode === "ai_direct") ? " • Mode: Direct AI (Google Data)" : "";
+        modalStudentSub.textContent = `${student.file_name} • Score: ${student.total_score}/${student.max_possible_score} (${student.percentage}%) • Confidence: ${student.overall_confidence_score}%${modeInfo}`;
 
         let html = "";
 

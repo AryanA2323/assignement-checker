@@ -59,26 +59,31 @@ python app.py
 Open your browser at: **`http://127.0.0.1:5050`**
 
 From the dashboard you can:
-1. Upload the master solution PDF or JSON (e.g. from `ass_1/`).
+1. **Choose your evaluation mode**:
+   - **Upload File / Paste Text**: Provide an answer key (PDF, JSON, or text) to grade strictly against.
+   - **✨ Check with AI**: **No master solution required!** Gemini reads the handwritten answers and evaluates factual correctness directly against authoritative real-world Google data & academic consensus.
 2. Upload multi-page student handwritten PDFs or images (e.g. from `ass_1/`).
 3. Select grading strictness (`Lenient`, `Standard`, `Strict`).
-4. Click **"Run AI Assignment Checking"**.
+4. Click **"Run AI Assignment Checking"** or **"✨ Run Direct AI Evaluation"**.
 5. View real-time scores, circular confidence gauges, transcribed answers, and export results to CSV or JSON!
 
 ### Option B: Command Line Interface (CLI)
 Run batch evaluation directly from your terminal:
 ```bash
-# Evaluate the new realistic college-level 'ass_1' dataset:
+# 1. Autonomous Direct AI evaluation (NO MASTER SOLUTION NEEDED - checked directly with Google data):
+python cli.py --ai-direct --students ass_1
+
+# With optional subject context hint:
+python cli.py --ai-direct --students ass_1 --subject "Distributed Systems"
+
+# 2. Evaluate with master solution key:
 python cli.py --master ass_1/master_solution.pdf --students ass_1
 
-# Evaluate demo students with demo master:
+# 3. Evaluate demo students with demo master:
 python cli.py
 
-# Evaluate custom folder with custom master:
-python cli.py --master path/to/master.pdf --students path/to/student_pdfs/ --output reports/results.csv
-
-# With custom API key or forced mock:
-python cli.py --api-key YOUR_KEY --strictness strict
+# 4. Offline mock simulator mode:
+python cli.py --ai-direct --students ass_1 --mock
 ```
 
 ---

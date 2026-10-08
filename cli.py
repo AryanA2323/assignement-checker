@@ -31,6 +31,17 @@ def main():
         help="Path to Master Solution file (.json or .txt)"
     )
     parser.add_argument(
+        "--ai-direct",
+        action="store_true",
+        help="Check directly with AI using real Google data without requiring a master solution"
+    )
+    parser.add_argument(
+        "--subject",
+        type=str,
+        default=None,
+        help="Optional subject or domain hint for AI Direct evaluation (e.g., 'Distributed Systems')"
+    )
+    parser.add_argument(
         "--students", "-s",
         type=str,
         default="demo_data/students",
@@ -62,15 +73,24 @@ def main():
 
     args = parser.parse_args()
 
-    # 1. Load Master Solution
-    master_path = Path(args.master)
-    if not master_path.exists():
-        print(f"[-] Error: Master solution not found at {master_path}")
-        sys.exit(1)
+    # 1. Master Solution / Mode Resolution
+    master_solution = None
+    evaluation_mode = "ai_direct" if args.ai_direct else "master_solution"
 
-    print(f"[*] Loading Master Solution: {master_path}")
-    master_solution = parse_master_solution_file(master_path)
-    print(f"[+] Loaded: '{master_solution.title}' with {len(master_solution.questions)} questions (Total Marks: {master_solution.total_marks})")
+    if args.ai_direct:
+        print("[*] Mode: Autonomous AI Direct Evaluation (Evaluating directly with real Google / academic knowledge)")
+        if args.subject:
+            print(f"[*] Subject Context: {args.subject}")
+        master_path = None
+    else:
+        master_path = Path(args.master)
+        if not master_path.exists():
+            print(f"[-] Error: Master solution not found at {master_path}")
+            sys.exit(1)
+
+        print(f"[*] Loading Master Solution: {master_path}")
+        master_solution = parse_master_solution_file(master_path)
+        print(f"[+] Loaded: '{master_solution.title}' with {len(master_solution.questions)} questions (Total Marks: {master_solution.total_marks})")
 
     # 2. Gather Student Submissions
     students_input = Path(args.students)
@@ -89,7 +109,7 @@ def main():
             })
     elif students_input.is_dir():
         for file_path in sorted(students_input.iterdir()):
-            if "master" in file_path.name.lower() or file_path.resolve() == master_path.resolve():
+            if "master" in file_path.name.lower() or (master_path and file_path.resolve() == master_path.resolve()):
                 continue
             ext = file_path.suffix.lower()
             if ext == ".pdf":
@@ -128,12 +148,15 @@ def main():
         submissions=submissions,
         master_solution=master_solution,
         strictness=args.strictness,
-        force_mock=args.mock
+        force_mock=args.mock,
+        evaluation_mode=evaluation_mode,
+        subject_or_topic=args.subject
     )
 
     # 5. Display Results
+    header_title = "DIRECT AI EVALUATION REPORT (GOOGLE DATA)" if evaluation_mode == "ai_direct" else "STUDENT EVALUATION SUMMARY REPORT"
     print("\n" + "=" * 76)
-    print(f"{'STUDENT EVALUATION SUMMARY REPORT':^76}")
+    print(f"{header_title:^76}")
     print("=" * 76)
     print(f"{'Student Name':<20} | {'Score':<10} | {'Pct':<7} | {'Confidence':<12} | {'Legibility':<10} | {'Status':<10}")
     print("-" * 76)
@@ -147,7 +170,8 @@ def main():
         )
 
     print("-" * 76)
-    print(f"Class Average Score:      {batch_summary.class_average_score} / {master_solution.total_marks} ({batch_summary.class_average_percentage}%)")
+    total_max = master_solution.total_marks if master_solution else (batch_summary.results[0].max_possible_score if batch_summary.results else 50.0)
+    print(f"Class Average Score:      {batch_summary.class_average_score} / {total_max} ({batch_summary.class_average_percentage}%)")
     print(f"Average AI Confidence:    {batch_summary.average_confidence}%")
     print(f"Submissions Flagged:      {batch_summary.flagged_for_review_count} / {batch_summary.total_submissions}")
     print(f"Total Processing Time:    {batch_summary.processing_time_total_seconds}s")

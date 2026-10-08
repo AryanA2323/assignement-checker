@@ -64,3 +64,18 @@ def test_api_export_csv_and_json(client):
     assert "application/json" in res_json.content_type
     data = json.loads(res_json.data)
     assert data["total_submissions"] == 3
+
+def test_api_evaluate_ai_direct(client):
+    # Evaluate with AI Direct mode without any master solution
+    res = client.post("/api/evaluate", data={
+        "evaluation_mode": "ai_direct",
+        "use_demo_students": "true",
+        "subject_or_topic": "Computer Science",
+        "force_mock": "true"
+    })
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["evaluation_mode"] == "ai_direct"
+    assert data["total_submissions"] == 3
+    assert len(data["results"]) == 3
+    assert data["results"][0]["evaluation_mode"] == "ai_direct"
