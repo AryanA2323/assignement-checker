@@ -11,10 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
         currentBatchResults: null
     };
 
-    // Elements
-    const apiStatusBadge = document.getElementById("apiStatusBadge");
-    const apiStatusText = document.getElementById("apiStatusText");
-
     // Master Solution
     const btnModeUpload = document.getElementById("btnModeUpload");
     const btnModePaste = document.getElementById("btnModePaste");
@@ -74,15 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch("/api/status");
             const data = await res.json();
             if (data.has_api_key) {
-                apiStatusBadge.className = "status-pill status-ready";
-                apiStatusText.textContent = `Gemini AI Connected (${data.model_name})`;
                 settingModel.value = data.model_name || "gemini-3.5-flash-lite";
                 settingThreshold.value = data.review_threshold || 70;
-            } else {
-                apiStatusBadge.className = "status-pill";
-                apiStatusBadge.style.color = "#f59e0b";
-                apiStatusBadge.style.background = "rgba(245, 158, 11, 0.12)";
-                apiStatusText.textContent = "Offline Simulation Mode";
             }
         } catch (err) {
             console.error("Status error:", err);

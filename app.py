@@ -10,6 +10,7 @@ from core.models import MasterSolution, BatchEvaluationSummary
 from core.utils import (
     optimize_image_for_eval,
     convert_pdf_to_images,
+    stitch_pages_vertically,
     parse_master_solution_file,
     parse_text_master_solution,
     export_batch_to_csv,
@@ -171,18 +172,17 @@ def evaluate():
             f.save(dest_path)
 
             if ext == ".pdf":
-                # Convert PDF pages into images
                 try:
                     images = convert_pdf_to_images(dest_path)
-                    for i, page_img in enumerate(images):
-                        page_filename = f"{Path(filename).stem}_page{i+1}.png"
-                        page_path = Config.UPLOAD_DIR / page_filename
-                        page_img.save(page_path, "PNG")
-                        submissions.append({
-                            "image": page_img,
-                            "file_name": page_filename,
-                            "preview_url": f"/uploads/{page_filename}"
-                        })
+                    stitched_img = stitch_pages_vertically(images)
+                    stitched_filename = f"{Path(filename).stem}_preview.jpg"
+                    stitched_path = Config.UPLOAD_DIR / stitched_filename
+                    stitched_img.save(stitched_path, "JPEG", quality=85)
+                    submissions.append({
+                        "image": stitched_img,
+                        "file_name": filename,
+                        "preview_url": f"/uploads/{stitched_filename}"
+                    })
                 except Exception as e:
                     return jsonify({"error": f"Failed to process PDF {filename}: {str(e)}"}), 400
             elif ext in Config.ALLOWED_IMAGE_EXTENSIONS:

@@ -3,7 +3,12 @@ import argparse
 from pathlib import Path
 from core.config import Config
 from core.models import MasterSolution
-from core.utils import parse_master_solution_file, export_batch_to_csv
+from core.utils import (
+    parse_master_solution_file,
+    export_batch_to_csv,
+    convert_pdf_to_images,
+    stitch_pages_vertically,
+)
 from core.evaluator import AssignmentEvaluator
 
 def print_banner():
@@ -71,16 +76,32 @@ def main():
     students_input = Path(args.students)
     submissions = []
     if students_input.is_file():
-        submissions.append({
-            "image": str(students_input),
-            "file_name": students_input.name
-        })
+        if students_input.suffix.lower() == ".pdf":
+            imgs = convert_pdf_to_images(students_input)
+            submissions.append({
+                "image": stitch_pages_vertically(imgs),
+                "file_name": students_input.name
+            })
+        else:
+            submissions.append({
+                "image": str(students_input),
+                "file_name": students_input.name
+            })
     elif students_input.is_dir():
-        for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
-            for img_file in students_input.glob(ext):
+        for file_path in sorted(students_input.iterdir()):
+            if "master" in file_path.name.lower() or file_path.resolve() == master_path.resolve():
+                continue
+            ext = file_path.suffix.lower()
+            if ext == ".pdf":
+                imgs = convert_pdf_to_images(file_path)
                 submissions.append({
-                    "image": str(img_file),
-                    "file_name": img_file.name
+                    "image": stitch_pages_vertically(imgs),
+                    "file_name": file_path.name
+                })
+            elif ext in (".png", ".jpg", ".jpeg", ".webp"):
+                submissions.append({
+                    "image": str(file_path),
+                    "file_name": file_path.name
                 })
     else:
         print(f"[-] Error: Student path not found: {students_input}")

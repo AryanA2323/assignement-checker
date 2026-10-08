@@ -304,48 +304,74 @@ CRITICAL: Return ONLY a valid JSON object matching this schema. Do NOT include m
         stem = Path(file_name).stem.lower()
         strictness_factor = {"lenient": 1.05, "standard": 1.0, "strict": 0.95}.get(strictness, 1.0)
 
-        if "charlie" in stem or "low" in stem:
-            # Charlie: Struggling student, messy handwriting, low confidence
-            student_name = student_name_hint or "Charlie Davis"
-            student_id = student_id_hint or "STU-1003"
-            target_ratio = 0.40 * strictness_factor
+        is_dist = "distributed" in master.title.lower() or "cs 545" in master.title.lower()
+
+        if any(k in stem for k in ["marcus", "charlie", "low", "student_3"]):
+            # Marcus / Charlie: Struggling student, messy handwriting, low confidence
+            student_name = student_name_hint or ("Marcus Vance" if "marcus" in stem else "Charlie Davis")
+            student_id = student_id_hint or ("CS-545-089" if "marcus" in stem else "STU-1003")
+            target_ratio = 0.42 * strictness_factor
             legibility = 52.0
             base_conf = 62.0
-            transcriptions = {
-                "Q1": "Attention = softmax(Q * K) * V. Scale factor sqrt(d_k) is used to scale down numbers. Attention is O(n^2) and RNN is O(n).",
-                "Q2": "Vanishing gradient is when gradients get small during backpropagation. Sigmoid makes gradients small. ReLU is better. Adam optimizer uses momentum and RMSprop gradient steps.",
-                "Q3": "Total samples = 10000. TP=85, TN=9730. Accuracy = (85 + 9730)/10000 = 98.15%. The model accuracy is 98.15% which is very high and sufficient for patients. Precision and Recall are around 50%.",
-                "Q4": "Data parallelism divides data. Model parallelism divides model. Ring all reduce connects GPUs in ring to reduce parameter server overload.",
-                "Q5": "L1 gives sparse weights. L2 gives small weights. Batch norm is for batches. Layer norm is for layers."
-            }
-        elif "bob" in stem or "medium" in stem or "average" in stem:
-            # Bob: Decent student, average handwriting, missing a few keywords
-            student_name = student_name_hint or "Bob Martinez"
-            student_id = student_id_hint or "STU-1002"
+            if is_dist:
+                transcriptions = {
+                    "Q1": "Raft log matching says logs have same terms. Leaders replicate entries to majority nodes. Older entries cannot be committed easily. Multi Paxos has phases and takes 2 RTTs. Raft takes 1 RTT. Raft leader election is simpler because candidate has up to date log.",
+                    "Q2": "Strict 2PL has locks. Growing phase and shrinking phase. Rigorous 2PL holds locks. Wait for graph shows transaction deadlocks. Write skew happens when two doctors log out at the same time, leaving 0 doctors. Snapshot isolation allows this because write sets don't overlap.",
+                    "Q3": "Consistent hashing maps keys to a circle. Virtual nodes improve hashing. Keys move when nodes join. Quorum condition: R + W <= N. Vector clocks resolve updates. LWW uses clock timestamps.",
+                    "Q4": "Failure detectors check if node is dead. FLP theorem says consensus is impossible with delays. PBFT requires 3f + 1 nodes to handle Byzantine faults."
+                }
+            else:
+                transcriptions = {
+                    "Q1": "Attention = softmax(Q * K) * V. Scale factor sqrt(d_k) is used to scale down numbers. Attention is O(n^2) and RNN is O(n).",
+                    "Q2": "Vanishing gradient is when gradients get small during backpropagation. Sigmoid makes gradients small. ReLU is better. Adam optimizer uses momentum and RMSprop gradient steps.",
+                    "Q3": "Total samples = 10000. TP=85, TN=9730. Accuracy = (85 + 9730)/10000 = 98.15%. The model accuracy is 98.15% which is very high and sufficient for patients. Precision and Recall are around 50%.",
+                    "Q4": "Data parallelism divides data. Model parallelism divides model. Ring all reduce connects GPUs in ring to reduce parameter server overload.",
+                    "Q5": "L1 gives sparse weights. L2 gives small weights. Batch norm is for batches. Layer norm is for layers."
+                }
+        elif any(k in stem for k in ["priya", "bob", "medium", "average", "student_2"]):
+            # Priya / Bob: Decent student, average handwriting, missing a few keywords
+            student_name = student_name_hint or ("Priya Sharma" if "priya" in stem else "Bob Martinez")
+            student_id = student_id_hint or ("CS-545-045" if "priya" in stem else "STU-1002")
             target_ratio = 0.68 * strictness_factor
             legibility = 80.0
             base_conf = 84.0
-            transcriptions = {
-                "Q1": "Attention = softmax(Q * K^T / sqrt(d_k)) * V. Q and K are projections of sequence embeddings. We divide by sqrt(d_k) to prevent dot products from getting too big which slows down softmax. Self-attention has O(n^2 * d) complexity because we compute the full n x n attention matrix. RNN complexity is O(n * d^2) because of recurrence.",
-                "Q2": "Vanishing gradient is caused by repeatedly multiplying small derivatives in backprop chain rule. Sigmoid max derivative is 0.25, so for many layers gradients vanish. ReLU derivative is 1 so it solves it. Adam equations: m_t = beta_1 m_{t-1} + (1 - beta_1) g_t (momentum), v_t = beta_2 v_{t-1} + (1 - beta_2) g_t^2. We use bias correction m_hat and v_hat to fix zero initialization at start, then update theta.",
-                "Q3": "TP = 85, FN = 15, FP = 170, TN = 9730. Total = 10,000. Accuracy = (85 + 9730) / 10000 = 98.15%. Precision = TP / (TP + FN) = 85 / (85 + 15) = 85 / 100 = 85.0% [Confused with Recall]. Recall = TP / (TP + FP) = 85 / (85 + 170) = 85 / 255 = 33.3%. F1 = 2 * (0.85 * 0.333) / (0.85 + 0.333) = 0.566 / 1.183 = 47.8%. Accuracy is misleading because negative cases dominate. In hospital tests Recall is most important.",
-                "Q4": "Data Parallelism copies model on all workers and splits data batches. Pipeline Parallelism splits network layers across multiple GPUs in a line. Parameter Server is slow because the master server gets overwhelmed with gradient traffic. Ring AllReduce organizes GPUs in a circle ring so communication is shared across workers.",
-                "Q5": "L1 regularization forces weights to 0 because of absolute value penalty, while L2 shrinks them. Batch Norm normalizes along batch dimension, but depends heavily on having large batch size. Layer Norm normalizes across feature dimensions per sample, so it works better for Transformers."
-            }
+            if is_dist:
+                transcriptions = {
+                    "Q1": "Log Matching Property means if two logs have an entry with same term and index, they have the same command and identical previous entries. In Raft, a leader cannot commit older entries directly by counting server responses; it has to commit an entry from its own current term. Steady state is 1 RTT for both Raft and Multi-Paxos. Raft leader election ensures elected leader already has all committed logs.",
+                    "Q2": "Strict 2PL: Transactions have two phases. In Phase 1 prepare message is sent, in Phase 2 commit message [confused with 2PC]. Rigorous 2PL holds locks until the end. Wait-For Graph is used to find deadlocks by looking for cycles. Write Skew in Snapshot Isolation: Suppose we need active doctors >= 1. D1 and D2 see 2 doctors active, so both go off duty. Both commit because write sets are disjoint, leaving 0 doctors. SSI tracks rw-antidependencies to prevent write skew.",
+                    "Q3": "Consistent hashing puts keys on a circle. Virtual nodes give each physical server multiple tokens to balance load. When 1 node is added, only 1/(N + 1) keys need to move. Quorum condition: R + W > N ensuring read and write sets overlap. Vector clocks track versions to detect conflicts. LWW uses timestamps but clock drift causes data loss.",
+                    "Q4": "Failure detector <>W has accuracy property where some correct node is not suspected. FLP impossibility says consensus cannot be solved in asynchronous systems with failures; <>W helps solve it by adding timing assumptions. PBFT requires N >= 3f + 1 because Byzantine nodes can send malicious messages and crash. If f nodes crash we need N - f to answer, and N - 2f > f, so N >= 3f + 1."
+                }
+            else:
+                transcriptions = {
+                    "Q1": "Attention = softmax(Q * K^T / sqrt(d_k)) * V. Q and K are projections of sequence embeddings. We divide by sqrt(d_k) to prevent dot products from getting too big which slows down softmax. Self-attention has O(n^2 * d) complexity because we compute the full n x n attention matrix. RNN complexity is O(n * d^2) because of recurrence.",
+                    "Q2": "Vanishing gradient is caused by repeatedly multiplying small derivatives in backprop chain rule. Sigmoid max derivative is 0.25, so for many layers gradients vanish. ReLU derivative is 1 so it solves it. Adam equations: m_t = beta_1 m_{t-1} + (1 - beta_1) g_t (momentum), v_t = beta_2 v_{t-1} + (1 - beta_2) g_t^2. We use bias correction m_hat and v_hat to fix zero initialization at start, then update theta.",
+                    "Q3": "TP = 85, FN = 15, FP = 170, TN = 9730. Total = 10,000. Accuracy = (85 + 9730) / 10000 = 98.15%. Precision = TP / (TP + FN) = 85 / (85 + 15) = 85 / 100 = 85.0% [Confused with Recall]. Recall = TP / (TP + FP) = 85 / (85 + 170) = 85 / 255 = 33.3%. F1 = 2 * (0.85 * 0.333) / (0.85 + 0.333) = 0.566 / 1.183 = 47.8%. Accuracy is misleading because negative cases dominate. In hospital tests Recall is most important.",
+                    "Q4": "Data Parallelism copies model on all workers and splits data batches. Pipeline Parallelism splits network layers across multiple GPUs in a line. Parameter Server is slow because the master server gets overwhelmed with gradient traffic. Ring AllReduce organizes GPUs in a circle ring so communication is shared across workers.",
+                    "Q5": "L1 regularization forces weights to 0 because of absolute value penalty, while L2 shrinks them. Batch Norm normalizes along batch dimension, but depends heavily on having large batch size. Layer Norm normalizes across feature dimensions per sample, so it works better for Transformers."
+                }
         else:
-            # Alice (default): Excellent student, neat handwriting, high confidence
-            student_name = student_name_hint or "Alice Johnson"
-            student_id = student_id_hint or "STU-1001"
+            # Alex / Alice: Excellent student, neat handwriting, high confidence
+            student_name = student_name_hint or ("Alex Chen" if "alex" in stem else "Alice Johnson")
+            student_id = student_id_hint or ("CS-545-012" if "alex" in stem else "STU-1001")
             target_ratio = 0.94 * strictness_factor
             legibility = 95.0
             base_conf = 96.0
-            transcriptions = {
-                "Q1": "Attention(Q, K, V) = softmax((Q * K^T) / sqrt(d_k)) * V, where Q, K in R^(n x d_k), V in R^(n x d_v). Justification for 1/sqrt(d_k): Assume components of q and k are independent zero-mean unit-variance variables; then dot product has variance d_k. Large d_k pushes softmax into saturated regions with near-zero gradients. Dividing by sqrt(d_k) preserves unit variance. Complexity: Self-Attention is O(n^2 * d) per layer with O(1) sequential steps. RNN is O(n * d^2) with O(n) sequential steps.",
-                "Q2": "dL/dw_1 = (dL/da_L) * prod_{l=2}^L (da_l/da_{l-1}) * (da_1/dw_1). For Sigmoid, derivative sigma'(z) <= 0.25, causing exponential gradient decay (0.25)^L -> 0. ReLU derivative is 1 for z > 0, preventing vanishing gradient. Adam equations: m_t = beta_1 m_{t-1} + (1 - beta_1) g_t, v_t = beta_2 v_{t-1} + (1 - beta_2) g_t^2. Bias correction: m_hat_t = m_t / (1 - beta_1^t), v_hat_t = v_t / (1 - beta_2^t). Update: theta_{t+1} = theta_t - (alpha / (sqrt(v_hat_t) + eps)) * m_hat_t.",
-                "Q3": "Total = 10,000 patients. Accuracy = (85 + 9730)/10000 = 98.15%. Precision = 85/(85 + 170) = 85/255 = 33.33%. Recall = 85/(85 + 15) = 85/100 = 85.00%. F1-Score = 2 * (P * R)/(P + R) = 2*(0.3333 * 0.85)/(0.3333 + 0.85) = 47.88%. Accuracy is misleading because a dummy all-negative model achieves 99.0% accuracy while detecting 0 patients. Recall is paramount in medical screening because False Negatives mean untreated patients (fatal risk).",
-                "Q4": "Data Parallelism duplicates model and splits mini-batch across GPUs; gradients averaged via AllReduce. Tensor Parallelism partitions weight matrices intra-layer (Megatron-LM), while Pipeline Parallelism partitions layers sequentially with micro-batch schedules (GPipe). Parameter Server has O(P * M) central bottleneck. Ring-AllReduce splits buffer into P chunks, sending 2 * ((P-1)/P) * M data across Scatter-Reduce and AllGather steps, remaining independent of worker count P.",
-                "Q5": "Geometry: L1 constraint ||w||_1 <= C forms a diamond with sharp corners on axes; expanding loss ellipses touch diamond vertices first, setting weights strictly to zero (sparsity). L2 constraint is a smooth circle. Batch Norm normalizes across batch dimension N for each channel: depends on batch size, fails for RNNs. Layer Norm normalizes across features C for each individual token: independent of batch size, ideal for Transformers."
-            }
+            if is_dist:
+                transcriptions = {
+                    "Q1": "Log Matching Property: If two logs contain an entry with the identical index and term, they store the same command and their logs are identical up to that index. Commit Safety Rule: A Raft leader cannot commit an entry from an older term simply by counting replicas; it must commit an entry from its CURRENT term by majority replication, which indirectly commits older entries by Log Matching. Steady-state: Both Multi-Paxos and Raft require 1 RTT for log replication. Leader recovery: Raft leader election guarantees the elected leader already contains all committed entries (zero catch-up needed). Multi-Paxos leaders must run Phase 1 across uncommitted slots to discover proposals.",
+                    "Q2": "Strict 2PL: All exclusive write locks must be held until transaction commit/abort; shared read locks may be released earlier. Rigorous 2PL holds all locks until end. Strict 2PL guarantees conflict serializability and avoids cascading aborts by preventing dirty reads. Wait-For Graph (WFG) tracks blocking dependencies Ti -> Tj; deadlocks correspond to directed cycles detected via DFS. Write Skew under Snapshot Isolation (SI): Doctors D1 and D2 active. T1 reads 2 active, sets D1 inactive. T2 concurrently reads 2 active, sets D2 inactive. Because write sets are disjoint, both commit, leaving 0 doctors active (invariant violated). SSI detects write skew by tracking rw-antidependencies and aborting dangerous structures.",
+                    "Q3": "Consistent Hashing maps keys and nodes to a 32-bit ring. Virtual nodes (V per physical node) bound partition load variance to O(1/V). When adding 1 node to an N-node cluster, the new node claims 1/(N + 1) of the ring, so exactly 1/(N + 1) of keys migrate (K / (N + 1) keys), avoiding O(K) rehashing. Quorum Condition: Strong consistency requires R + W > N, guaranteeing overlap by Pigeonhole Principle. Vector clocks track causal order: VC(A) <= VC(B). Last-Write-Wins (LWW) hazard: NTP clock drift silently drops legitimate writes.",
+                    "Q4": "Chandra-Toueg <>W Failure Detector: 1) Weak Completeness: every crashed node is eventually suspected by some correct node. 2) Eventual Weak Accuracy: eventually some correct process is never suspected. Circumvents FLP impossibility by augmenting asynchronous model with partial synchrony. PBFT 3f + 1 Derivation: With f Byzantine nodes, liveness requires progressing after N - f responses. Among these N - f responses, up to f can be Byzantine lies, leaving N - 2f guaranteed correct responses. To ensure correct nodes outnumber Byzantine: N - 2f > f ===> N >= 3f + 1."
+                }
+            else:
+                transcriptions = {
+                    "Q1": "Attention(Q, K, V) = softmax((Q * K^T) / sqrt(d_k)) * V, where Q, K in R^(n x d_k), V in R^(n x d_v). Justification for 1/sqrt(d_k): Assume components of q and k are independent zero-mean unit-variance variables; then dot product has variance d_k. Large d_k pushes softmax into saturated regions with near-zero gradients. Dividing by sqrt(d_k) preserves unit variance. Complexity: Self-Attention is O(n^2 * d) per layer with O(1) sequential steps. RNN is O(n * d^2) with O(n) sequential steps.",
+                    "Q2": "dL/dw_1 = (dL/da_L) * prod_{l=2}^L (da_l/da_{l-1}) * (da_1/dw_1). For Sigmoid, derivative sigma'(z) <= 0.25, causing exponential gradient decay (0.25)^L -> 0. ReLU derivative is 1 for z > 0, preventing vanishing gradient. Adam equations: m_t = beta_1 m_{t-1} + (1 - beta_1) g_t, v_t = beta_2 v_{t-1} + (1 - beta_2) g_t^2. Bias correction: m_hat_t = m_t / (1 - beta_1^t), v_hat_t = v_t / (1 - beta_2^t). Update: theta_{t+1} = theta_t - (alpha / (sqrt(v_hat_t) + eps)) * m_hat_t.",
+                    "Q3": "Total = 10,000 patients. Accuracy = (85 + 9730)/10000 = 98.15%. Precision = 85/(85 + 170) = 85/255 = 33.33%. Recall = 85/(85 + 15) = 85/100 = 85.00%. F1-Score = 2 * (P * R)/(P + R) = 2*(0.3333 * 0.85)/(0.3333 + 0.85) = 47.88%. Accuracy is misleading because a dummy all-negative model achieves 99.0% accuracy while detecting 0 patients. Recall is paramount in medical screening because False Negatives mean untreated patients (fatal risk).",
+                    "Q4": "Data Parallelism duplicates model and splits mini-batch across GPUs; gradients averaged via AllReduce. Tensor Parallelism partitions weight matrices intra-layer (Megatron-LM), while Pipeline Parallelism partitions layers sequentially with micro-batch schedules (GPipe). Parameter Server has O(P * M) central bottleneck. Ring-AllReduce splits buffer into P chunks, sending 2 * ((P-1)/P) * M data across Scatter-Reduce and AllGather steps, remaining independent of worker count P.",
+                    "Q5": "Geometry: L1 constraint ||w||_1 <= C forms a diamond with sharp corners on axes; expanding loss ellipses touch diamond vertices first, setting weights strictly to zero (sparsity). L2 constraint is a smooth circle. Batch Norm normalizes across batch dimension N for each channel: depends on batch size, fails for RNNs. Layer Norm normalizes across features C for each individual token: independent of batch size, ideal for Transformers."
+                }
 
         q_evals: List[QuestionEvaluation] = []
         for i, q in enumerate(master.questions):

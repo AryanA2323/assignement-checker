@@ -53,11 +53,55 @@ def convert_pdf_to_images(pdf_path: Union[str, Path]) -> List[Image.Image]:
     except Exception as e:
         raise RuntimeError(f"Failed to extract images from PDF: {e}")
 
+def stitch_pages_vertically(images: List[Image.Image], max_dimension: int = 2400) -> Image.Image:
+    """Stitches multiple page images of a student paper vertically into a single coherent image."""
+    if not images:
+        raise ValueError("No images provided to stitch.")
+    if len(images) == 1:
+        return optimize_image_for_eval(images[0], max_dimension=max_dimension)
+
+    target_width = 1200
+    resized = []
+    total_height = 0
+    for img in images:
+        w, h = img.size
+        ratio = target_width / float(w)
+        new_h = int(h * ratio)
+        res = img.resize((target_width, new_h), Image.Resampling.LANCZOS)
+        resized.append(res)
+        total_height += new_h
+
+    stitched = Image.new("RGB", (target_width, total_height), (255, 255, 255))
+    curr_y = 0
+    for r in resized:
+        stitched.paste(r, (0, curr_y))
+        curr_y += r.height
+
+    if total_height > max_dimension:
+        ratio = max_dimension / float(total_height)
+        stitched = stitched.resize((int(target_width * ratio), max_dimension), Image.Resampling.LANCZOS)
+
+    return stitched
+
 def parse_master_solution_file(file_path: Union[str, Path]) -> MasterSolution:
-    """Parses a Master Solution from JSON or text file."""
+    """Parses a Master Solution from JSON, text, markdown, or PDF file."""
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"Master solution file not found: {file_path}")
+
+    # If it is a PDF file, check sibling JSON or extract text using fitz
+    if path.suffix.lower() == ".pdf":
+        json_sibling = path.with_suffix(".json")
+        if json_sibling.exists():
+            with open(json_sibling, "r", encoding="utf-8") as f:
+                return MasterSolution.from_dict(json.load(f))
+        try:
+            import fitz
+            doc = fitz.open(path)
+            content = "\n".join(page.get_text() for page in doc)
+            return parse_text_master_solution(content)
+        except Exception as e:
+            raise RuntimeError(f"Could not extract text from Master PDF: {e}")
 
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
