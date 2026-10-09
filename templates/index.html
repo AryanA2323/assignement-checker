@@ -3,255 +3,516 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assignment Checker — Handwritten Evaluation & Confidence Scoring</title>
-    <meta name="description" content="Simple, automated AI evaluation of handwritten student assignments against a master solution key with confidence scoring.">
-    <!-- Google Fonts -->
+    <title>Assignment Checker — Autonomous Handwritten Evaluation & Confidence Intelligence</title>
+    <meta name="description" content="Enterprise-grade AI evaluation for handwritten student assignments with multimodal vision, real-world Google data grounding, and confidence scoring.">
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="/static/css/style.css">
+    
+    <!-- Modern Libraries: Lucide Icons, Chart.js, Canvas Confetti -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Top Navigation -->
-        <header class="header">
-            <div class="header-brand">
-                <h1>Assignment Checker</h1>
-                <p>Automated handwritten evaluation with accuracy confidence scoring</p>
-            </div>
-            <div class="header-status">
-                <button id="btnOpenSettings" class="btn-secondary btn-icon" title="API Settings">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    Settings
-                </button>
+    <!-- Ambient Background Lighting -->
+    <div class="ambient-glow glow-top"></div>
+    <div class="ambient-glow glow-right"></div>
+    <div class="ambient-glow glow-left"></div>
+
+    <div class="app-layout">
+        <!-- Apple-grade Frosted Glass Top Navigation -->
+        <header class="navbar">
+            <div class="navbar-container">
+                <div class="brand">
+                    <div class="brand-icon-box">
+                        <i data-lucide="sparkles" class="brand-icon"></i>
+                    </div>
+                    <div class="brand-meta">
+                        <div class="brand-title-row">
+                            <span class="brand-name">ASSIGNMENT CHECKER</span>
+                            <span class="version-tag">PRO</span>
+                        </div>
+                        <span class="brand-subtitle">Autonomous Multimodal Vision & Intelligence</span>
+                    </div>
+                </div>
+
+                <div class="nav-actions">
+                    <div class="status-indicator-pill" id="systemStatusPill" title="Multimodal AI Evaluator is ready">
+                        <span class="status-dot-pulse"></span>
+                        <span class="status-indicator-text">Vision Engine Online</span>
+                    </div>
+
+                    <button type="button" class="btn-sample-load" id="btnQuickSample" title="Quick load sample CS 545 Distributed Systems assignment with multi-page handwritten student papers">
+                        <i data-lucide="zap" class="btn-icon-svg"></i>
+                        <span>Load Sample Dataset</span>
+                    </button>
+
+                    <button type="button" class="btn-glass btn-icon-only" id="btnOpenSettings" title="API Settings & Model Configuration">
+                        <i data-lucide="sliders" class="btn-icon-svg"></i>
+                    </button>
+                </div>
             </div>
         </header>
 
-        <!-- Main Form / Inputs -->
-        <main class="main-content">
-            <div class="input-grid">
-                <!-- Step 1: Master Solution -->
-                <section class="card input-card">
-                    <div class="step-header">
-                        <span class="step-badge">1</span>
-                        <div>
-                            <h2>Master Solution (Answer Key)</h2>
-                            <p class="step-desc">The reference solution against which assignments are graded</p>
-                        </div>
-                    </div>
-
-                    <!-- Mode Toggle -->
-                    <div class="mode-switch">
-                        <button type="button" class="switch-btn active" id="btnModeUpload">Upload File</button>
-                        <button type="button" class="switch-btn" id="btnModePaste">Paste Text</button>
-                        <button type="button" class="switch-btn switch-btn-ai" id="btnModeAIDirect">✨ Check with AI</button>
-                    </div>
-
-                    <!-- Mode: File Upload -->
-                    <div id="masterFileSection" class="upload-section">
-                        <div class="drop-zone" id="masterDropZone">
-                            <input type="file" id="masterFileInput" accept=".json,.txt,.md,.pdf" style="display:none">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <p class="drop-title">Drop answer key file here, or click to browse</p>
-                            <p class="drop-hint">Supports JSON, TXT, Markdown, or PDF</p>
-                        </div>
-                        <div id="masterFileInfo" class="file-tag" style="display:none"></div>
-                    </div>
-
-                    <!-- Mode: Paste Text -->
-                    <div id="masterTextSection" class="text-section" style="display:none">
-                        <textarea id="masterTextInput" class="code-textarea" rows="6" placeholder="Paste your question and answer key here:&#10;&#10;Q1: Explain Supervised Learning with examples.&#10;Marks: 5&#10;Answer: Supervised learning maps inputs to labeled outputs...&#10;&#10;Q2: What is overfitting?&#10;Marks: 5&#10;Answer: Overfitting occurs when the model learns training noise..."></textarea>
-                    </div>
-
-                    <!-- Mode: Direct AI Evaluation (No Master Solution) -->
-                    <div id="masterAIDirectSection" class="ai-direct-section" style="display:none">
-                        <div class="ai-direct-banner">
-                            <div class="ai-direct-icon">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                </svg>
-                            </div>
-                            <div class="ai-direct-content">
-                                <h3>Autonomous AI Evaluation</h3>
-                                <p><strong>No master solution required!</strong> Gemini AI reads students' handwriting and evaluates factual correctness directly against real-world <strong>Google data & academic knowledge</strong>.</p>
-                            </div>
-                        </div>
-                        <div class="ai-direct-options">
-                            <label for="subjectTopicInput" class="select-label">Subject / Topic (Optional):</label>
-                            <input type="text" id="subjectTopicInput" class="form-input" placeholder="e.g. Distributed Systems, Machine Learning, Organic Chemistry...">
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Step 2: Student Handwritten Assignments -->
-                <section class="card input-card">
-                    <div class="step-header">
-                        <span class="step-badge">2</span>
-                        <div>
-                            <h2>Student Handwritten Assignments</h2>
-                            <p class="step-desc">Photos, scans, or PDFs of students' handwritten papers</p>
-                        </div>
-                    </div>
-
-                    <div class="drop-zone" id="studentsDropZone">
-                        <input type="file" id="studentsFileInput" accept="image/*,.pdf" multiple style="display:none">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                            <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                        <p class="drop-title">Drop student papers here, or click to browse</p>
-                        <p class="drop-hint">Select one or multiple files (.png, .jpg, .jpeg, .pdf)</p>
-                    </div>
-
-                    <!-- Selected Files List -->
-                    <div id="studentsFilesList" class="file-list" style="display:none">
-                        <div class="file-list-header">
-                            <span>Selected Files (<span id="filesCount">0</span>)</span>
-                            <button type="button" id="btnClearFiles" class="btn-link">Clear all</button>
-                        </div>
-                        <div id="filesContainer" class="file-items"></div>
-                    </div>
-                </section>
-            </div>
-
-            <!-- Action Bar -->
-            <div class="action-bar">
-                <div class="action-settings">
-                    <label for="strictnessSelect" class="select-label">Strictness:</label>
-                    <select id="strictnessSelect" class="form-select">
-                        <option value="standard" selected>Standard (Balanced)</option>
-                        <option value="lenient">Lenient (Generous partial credit)</option>
-                        <option value="strict">Strict (Demands exact technical terms)</option>
-                    </select>
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+            <!-- Hero Introduction -->
+            <section class="hero-section">
+                <div class="hero-chip">
+                    <i data-lucide="cpu" class="chip-icon"></i>
+                    <span>Gemini Multimodal Intelligence &bull; Multipage Handwritten OCR &bull; Grounded Verification</span>
                 </div>
-                <button type="button" id="btnEvaluate" class="btn-primary btn-large">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    Check Assignments
-                </button>
+                <h1 class="hero-title">
+                    Evaluate handwritten assignments with <span class="gradient-text">mathematical precision</span> and confidence intelligence.
+                </h1>
+                <p class="hero-desc">
+                    Grade submissions against an official master answer key, or switch to <strong>Autonomous AI Mode</strong> to verify derivations and facts directly against real-world Google data — no master solution required.
+                </p>
+            </section>
+
+            <!-- Configuration Grid: Step 1 (Master/AI) + Step 2 (Students) -->
+            <div class="workspace-grid">
+                <!-- Card 1: Master Answer Key / Autonomous AI -->
+                <section class="glass-card config-card" id="cardStep1">
+                    <div class="card-header">
+                        <div class="step-num-badge">1</div>
+                        <div class="card-titles">
+                            <h2 class="card-title">Master Solution & Rubric</h2>
+                            <p class="card-desc">Define the standard or let AI autonomously grade with Google data</p>
+                        </div>
+                    </div>
+
+                    <!-- Apple-style Segmented Switch -->
+                    <div class="segmented-control" role="tablist">
+                        <button type="button" class="seg-btn active" id="btnModeUpload" role="tab" aria-selected="true">
+                            <i data-lucide="file-text" class="seg-icon"></i>
+                            <span>Upload File</span>
+                        </button>
+                        <button type="button" class="seg-btn" id="btnModePaste" role="tab" aria-selected="false">
+                            <i data-lucide="pen-tool" class="seg-icon"></i>
+                            <span>Paste Text</span>
+                        </button>
+                        <button type="button" class="seg-btn seg-btn-ai" id="btnModeAIDirect" role="tab" aria-selected="false">
+                            <i data-lucide="sparkles" class="seg-icon"></i>
+                            <span>Check with AI</span>
+                        </button>
+                    </div>
+
+                    <!-- Mode A: File Upload Dropzone -->
+                    <div id="masterFileSection" class="tab-pane active-pane">
+                        <div class="drop-surface" id="masterDropZone">
+                            <input type="file" id="masterFileInput" accept=".json,.txt,.md,.pdf" style="display:none">
+                            <div class="drop-illustration">
+                                <i data-lucide="upload-cloud" class="drop-icon"></i>
+                            </div>
+                            <h3 class="drop-title">Drop answer key PDF or JSON here</h3>
+                            <p class="drop-sub">Supports official PDFs, structured JSON, or Markdown rubrics</p>
+                            <div class="format-tags">
+                                <span class="format-tag">.PDF</span>
+                                <span class="format-tag">.JSON</span>
+                                <span class="format-tag">.TXT</span>
+                            </div>
+                        </div>
+                        <div id="masterFileInfo" class="file-loaded-pill" style="display:none"></div>
+                    </div>
+
+                    <!-- Mode B: Paste Text Editor -->
+                    <div id="masterTextSection" class="tab-pane" style="display:none">
+                        <div class="editor-container">
+                            <div class="editor-header">
+                                <span class="editor-lang">MARKDOWN / PLAIN TEXT</span>
+                                <button type="button" class="btn-micro" id="btnInsertSampleText">Insert Sample Rubric</button>
+                            </div>
+                            <textarea id="masterTextInput" class="code-editor" rows="7" placeholder="Paste questions and answer key:&#10;&#10;Q1: Explain Raft Log Matching Property.&#10;Marks: 10&#10;Answer: If two logs have an entry with identical term...&#10;&#10;Q2: What is Write Skew in Snapshot Isolation?&#10;Marks: 10&#10;Answer: An anomaly where disjoint write sets violate invariant..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Mode C: Autonomous AI Direct Mode (Grounded in Google Data) -->
+                    <div id="masterAIDirectSection" class="tab-pane" style="display:none">
+                        <div class="ai-hero-box">
+                            <div class="ai-hero-glow"></div>
+                            <div class="ai-hero-header">
+                                <div class="ai-badge-aura">
+                                    <i data-lucide="globe-2" class="ai-badge-icon"></i>
+                                </div>
+                                <div>
+                                    <h3 class="ai-hero-title">Grounded Google Knowledge Evaluation</h3>
+                                    <p class="ai-hero-desc"><strong>Zero master solution needed.</strong> Gemini AI will autonomously examine the handwritten assignments, identify the questions, and evaluate technical correctness directly against authoritative real-world Google & academic facts.</p>
+                                </div>
+                            </div>
+
+                            <div class="ai-options-row">
+                                <label for="subjectTopicInput" class="input-label">Course or Subject Domain (Optional):</label>
+                                <div class="input-with-icon">
+                                    <i data-lucide="book-open" class="input-inline-icon"></i>
+                                    <input type="text" id="subjectTopicInput" class="text-input" placeholder="e.g. Distributed Systems, Machine Learning, Organic Chemistry...">
+                                </div>
+                                <div class="quick-tags-row">
+                                    <span class="quick-tag" data-tag="Distributed Systems">Distributed Systems</span>
+                                    <span class="quick-tag" data-tag="Deep Learning">Deep Learning</span>
+                                    <span class="quick-tag" data-tag="Computer Networks">Computer Networks</span>
+                                    <span class="quick-tag" data-tag="Calculus & Analysis">Calculus</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Card 2: Student Handwritten Assignments -->
+                <section class="glass-card config-card" id="cardStep2">
+                    <div class="card-header">
+                        <div class="step-num-badge">2</div>
+                        <div class="card-titles">
+                            <h2 class="card-title">Student Handwritten Submissions</h2>
+                            <p class="card-desc">Multi-page PDFs, scans, photos, or batch folders</p>
+                        </div>
+                    </div>
+
+                    <!-- Students Dropzone -->
+                    <div class="drop-surface" id="studentsDropZone">
+                        <input type="file" id="studentsFileInput" accept="image/*,.pdf" multiple style="display:none">
+                        <div class="drop-illustration">
+                            <i data-lucide="file-plus" class="drop-icon"></i>
+                        </div>
+                        <h3 class="drop-title">Drop student papers or PDFs here</h3>
+                        <p class="drop-sub">Multi-page PDFs will be automatically stitched for full-document vision evaluation</p>
+                        <div class="format-tags">
+                            <span class="format-tag">Multi-page PDF</span>
+                            <span class="format-tag">PNG</span>
+                            <span class="format-tag">JPG / JPEG</span>
+                        </div>
+                    </div>
+
+                    <!-- Selected Files Showcase Grid -->
+                    <div id="studentsFilesList" class="files-showcase" style="display:none">
+                        <div class="files-showcase-header">
+                            <div class="files-count-badge">
+                                <i data-lucide="layers" class="mini-icon"></i>
+                                <span><strong id="filesCount">0</strong> Submissions Attached</span>
+                            </div>
+                            <button type="button" id="btnClearFiles" class="btn-text-danger">
+                                <i data-lucide="trash-2" class="mini-icon"></i>
+                                <span>Clear all</span>
+                            </button>
+                        </div>
+                        <div id="filesContainer" class="files-card-grid"></div>
+                    </div>
+                </section>
             </div>
 
-            <!-- Loading State -->
-            <div id="loadingCard" class="card loading-card" style="display:none">
-                <div class="spinner"></div>
-                <h3 id="loadingTitle">Evaluating Assignments...</h3>
-                <p id="loadingSubtitle">Transcribing student handwriting and scoring against master key</p>
-            </div>
+            <!-- Execution Action Bar -->
+            <div class="glass-bar action-bar">
+                <div class="action-settings-cluster">
+                    <div class="setting-item">
+                        <label for="strictnessSelect" class="action-label">
+                            <i data-lucide="scale" class="label-icon"></i>
+                            <span>Grading Rigor:</span>
+                        </label>
+                        <div class="select-wrapper">
+                            <select id="strictnessSelect" class="custom-select">
+                                <option value="standard" selected>Standard (Balanced Academic Rigor)</option>
+                                <option value="lenient">Lenient (Generous Partial Credit)</option>
+                                <option value="strict">Strict (Demands Precise Terminology)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Results Section -->
-            <section id="resultsSection" class="results-section" style="display:none">
-                <div class="results-header">
-                    <h2>Evaluation Results</h2>
-                    <button type="button" id="btnExportCSV" class="btn-secondary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        Download Report (CSV)
+                <div class="action-btn-cluster">
+                    <button type="button" id="btnEvaluate" class="btn-cta-primary">
+                        <span class="cta-shine"></span>
+                        <i data-lucide="play" class="cta-icon"></i>
+                        <span id="btnEvaluateText">Run AI Assignment Checking</span>
                     </button>
                 </div>
+            </div>
 
-                <!-- Summary Metrics -->
-                <div class="summary-metrics">
-                    <div class="metric-box">
-                        <span class="metric-title">Assignments Evaluated</span>
-                        <span class="metric-num" id="metricTotal">0</span>
+            <!-- Modern Multi-Stage Loading State -->
+            <div id="loadingCard" class="glass-card loading-showcase" style="display:none">
+                <div class="loading-orb-container">
+                    <div class="pulse-aura"></div>
+                    <div class="spinning-gradient-ring"></div>
+                    <div class="loading-center-icon">
+                        <i data-lucide="sparkles" class="pulsing-sparkle"></i>
                     </div>
-                    <div class="metric-box">
-                        <span class="metric-title">Class Average</span>
-                        <span class="metric-num" id="metricAverage">--</span>
+                </div>
+                <h3 id="loadingTitle" class="loading-title">Analyzing Handwritten Submissions...</h3>
+                <p id="loadingSubtitle" class="loading-subtitle">Multimodal vision engine is reading student papers and verifying facts</p>
+                
+                <div class="progress-milestones">
+                    <div class="milestone-item active" id="ms1">
+                        <span class="milestone-dot"></span>
+                        <span>1. OCR & Layout Extraction</span>
                     </div>
-                    <div class="metric-box">
-                        <span class="metric-title">Average AI Confidence</span>
-                        <span class="metric-num" id="metricConfidence">--%</span>
+                    <div class="milestone-item" id="ms2">
+                        <span class="milestone-dot"></span>
+                        <span>2. Technical Knowledge Verification</span>
                     </div>
-                    <div class="metric-box" id="metricReviewBox">
-                        <span class="metric-title">Needs Manual Review</span>
-                        <span class="metric-num" id="metricReviewCount">0</span>
+                    <div class="milestone-item" id="ms3">
+                        <span class="milestone-dot"></span>
+                        <span>3. Confidence & Rubric Synthesis</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results & Analytics Showcase -->
+            <section id="resultsSection" class="results-showcase" style="display:none">
+                <div class="results-header-row">
+                    <div>
+                        <div class="results-badge">
+                            <i data-lucide="check-circle" class="badge-icon"></i>
+                            <span>Evaluation Complete</span>
+                        </div>
+                        <h2 class="results-heading">Academic Performance Intelligence</h2>
+                    </div>
+
+                    <div class="results-actions-group">
+                        <button type="button" id="btnToggleChart" class="btn-glass" title="Toggle visual performance chart">
+                            <i data-lucide="bar-chart-3" class="btn-icon-svg"></i>
+                            <span id="btnToggleChartText">Analytics Chart</span>
+                        </button>
+                        <button type="button" id="btnExportCSV" class="btn-glass btn-highlight">
+                            <i data-lucide="download" class="btn-icon-svg"></i>
+                            <span>Export CSV</span>
+                        </button>
+                        <button type="button" id="btnPrintReport" class="btn-glass" title="Print or save PDF report">
+                            <i data-lucide="printer" class="btn-icon-svg"></i>
+                            <span>Print</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Results Table -->
-                <div class="card table-card">
-                    <table class="results-table">
-                        <thead>
-                            <tr>
-                                <th>Student / File</th>
-                                <th>Score</th>
-                                <th>Percentage</th>
-                                <th>AI Confidence</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resultsTableBody">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
+                <!-- Executive Metric KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="glass-card kpi-card">
+                        <div class="kpi-top">
+                            <span class="kpi-label">Submissions Evaluated</span>
+                            <div class="kpi-icon-pill"><i data-lucide="users"></i></div>
+                        </div>
+                        <div class="kpi-value-row">
+                            <span class="kpi-number" id="metricTotal">0</span>
+                            <span class="kpi-sub" id="metricTotalSub">Completed</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card kpi-card">
+                        <div class="kpi-top">
+                            <span class="kpi-label">Class Average Score</span>
+                            <div class="kpi-icon-pill pill-indigo"><i data-lucide="award"></i></div>
+                        </div>
+                        <div class="kpi-value-row">
+                            <span class="kpi-number" id="metricAverage">--</span>
+                            <span class="kpi-sub" id="metricAveragePct">--%</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card kpi-card">
+                        <div class="kpi-top">
+                            <span class="kpi-label">Average AI Confidence</span>
+                            <div class="kpi-icon-pill pill-emerald"><i data-lucide="shield-check"></i></div>
+                        </div>
+                        <div class="kpi-value-row">
+                            <span class="kpi-number" id="metricConfidence">--%</span>
+                            <span class="kpi-sub">Transcription Fidelity</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card kpi-card" id="metricReviewBox">
+                        <div class="kpi-top">
+                            <span class="kpi-label">Teacher Audit Recommended</span>
+                            <div class="kpi-icon-pill pill-amber"><i data-lucide="alert-triangle"></i></div>
+                        </div>
+                        <div class="kpi-value-row">
+                            <span class="kpi-number" id="metricReviewCount">0</span>
+                            <button type="button" class="kpi-action-link" id="btnFilterReviewOnly">Filter Flagged</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Chart.js Performance Analytics View -->
+                <div class="glass-card chart-card" id="analyticsChartContainer">
+                    <div class="chart-header">
+                        <div class="chart-title-group">
+                            <h3 class="chart-title">Class Grade & Confidence Distribution</h3>
+                            <p class="chart-subtitle">Real-time comparison of student marks against AI confidence heuristics</p>
+                        </div>
+                        <div class="chart-legend-custom">
+                            <span class="legend-pill legend-score"><span class="legend-dot dot-score"></span> Score (%)</span>
+                            <span class="legend-pill legend-conf"><span class="legend-dot dot-conf"></span> AI Confidence (%)</span>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-box">
+                        <canvas id="classPerformanceChart" height="260"></canvas>
+                    </div>
+                </div>
+
+                <!-- Filter & Search Toolbar -->
+                <div class="glass-card table-wrapper-card">
+                    <div class="table-toolbar">
+                        <div class="search-input-box">
+                            <i data-lucide="search" class="search-icon"></i>
+                            <input type="text" id="searchInput" class="search-input" placeholder="Search student name, roll number, or file...">
+                        </div>
+
+                        <div class="table-filter-pills">
+                            <button type="button" class="filter-pill active" data-filter="all">All (<span id="countAll">0</span>)</button>
+                            <button type="button" class="filter-pill" data-filter="verified">Verified (<span id="countVerified">0</span>)</button>
+                            <button type="button" class="filter-pill pill-alert" data-filter="flagged">Needs Review (<span id="countFlagged">0</span>)</button>
+                        </div>
+                    </div>
+
+                    <!-- Apple-style Results Table -->
+                    <div class="table-scroll-surface">
+                        <table class="enterprise-table">
+                            <thead>
+                                <tr>
+                                    <th>Student & Submission</th>
+                                    <th>Evaluation Mode</th>
+                                    <th>Score Awarded</th>
+                                    <th>Percentage</th>
+                                    <th>AI Confidence</th>
+                                    <th>Status</th>
+                                    <th style="text-align:right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Student Detail Modal -->
-    <div id="detailModal" class="modal-overlay" style="display:none">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div>
-                    <h3 id="modalStudentName">Student Evaluation</h3>
-                    <p id="modalStudentSub" class="modal-sub">Score and question-by-question breakdown</p>
+    <!-- Student Detail Inspection Modal (Apple Keynote Quality) -->
+    <div id="detailModal" class="modal-backdrop" style="display:none">
+        <div class="modal-surface">
+            <!-- Modal Header -->
+            <div class="modal-top">
+                <div class="modal-header-meta">
+                    <div class="modal-avatar" id="modalStudentAvatar">AC</div>
+                    <div>
+                        <div class="modal-title-row">
+                            <h3 id="modalStudentName" class="modal-title">Alex Chen</h3>
+                            <span id="modalModeBadge" class="mode-badge">✨ Google Data</span>
+                        </div>
+                        <p id="modalStudentSub" class="modal-subtitle">student_1_alex_chen.pdf &bull; CS-545-012</p>
+                    </div>
                 </div>
-                <button type="button" id="btnCloseModal" class="btn-close">&times;</button>
+                <div class="modal-header-actions">
+                    <button type="button" id="btnCloseModal" class="btn-close-circle" title="Close inspector">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Populated dynamically -->
+
+            <!-- Modal Nav Tabs -->
+            <div class="modal-tabs-bar">
+                <button type="button" class="modal-tab active" data-tab="tabRubric">
+                    <i data-lucide="clipboard-check" class="tab-icon"></i>
+                    <span>Question Breakdown</span>
+                </button>
+                <button type="button" class="modal-tab" data-tab="tabScan">
+                    <i data-lucide="file-search" class="tab-icon"></i>
+                    <span>Handwritten Scan</span>
+                </button>
+                <button type="button" class="modal-tab" data-tab="tabAudit">
+                    <i data-lucide="shield-alert" class="tab-icon"></i>
+                    <span>AI Confidence Diagnostics</span>
+                </button>
+            </div>
+
+            <!-- Modal Body Panes -->
+            <div class="modal-body-content">
+                <!-- Pane 1: Question Rubric Breakdown -->
+                <div id="tabRubric" class="modal-pane active-pane"></div>
+
+                <!-- Pane 2: Handwritten Original Scan Viewer -->
+                <div id="tabScan" class="modal-pane" style="display:none">
+                    <div class="scan-viewer-box">
+                        <div class="scan-toolbar">
+                            <span class="scan-filename" id="scanFileName">Original Submission Document</span>
+                            <a id="scanDownloadBtn" href="#" target="_blank" class="scan-link" download>
+                                <i data-lucide="external-link"></i>
+                                <span>Open Full Image</span>
+                            </a>
+                        </div>
+                        <div class="scan-image-container">
+                            <img id="scanPreviewImage" src="" alt="Student Handwritten Scan" class="scan-img">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pane 3: Confidence Diagnostics -->
+                <div id="tabAudit" class="modal-pane" style="display:none">
+                    <div id="diagnosticsContent"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal-overlay" style="display:none">
-        <div class="modal-card modal-sm">
-            <div class="modal-header">
-                <h3>Settings</h3>
-                <button type="button" id="btnCloseSettings" class="btn-close">&times;</button>
+    <!-- API Settings Modal -->
+    <div id="settingsModal" class="modal-backdrop" style="display:none">
+        <div class="modal-surface modal-sm">
+            <div class="modal-top">
+                <div class="modal-header-meta">
+                    <div class="modal-icon-pill"><i data-lucide="sliders"></i></div>
+                    <div>
+                        <h3 class="modal-title">Engine Configuration</h3>
+                        <p class="modal-subtitle">Gemini API credentials & review heuristics</p>
+                    </div>
+                </div>
+                <button type="button" id="btnCloseSettings" class="btn-close-circle">
+                    <i data-lucide="x"></i>
+                </button>
             </div>
-            <div class="modal-body">
+
+            <div class="modal-form-content">
                 <div class="form-group">
-                    <label for="settingApiKey" class="form-label">Gemini API Key</label>
-                    <input type="password" id="settingApiKey" class="form-input" placeholder="AIzaSy...">
-                    <span class="form-hint">Stored in local <code>.env</code> file.</span>
+                    <label for="settingApiKey" class="field-label">Gemini API Key</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="key" class="input-inline-icon"></i>
+                        <input type="password" id="settingApiKey" class="text-input" placeholder="AIzaSy...">
+                    </div>
+                    <span class="field-hint">Stored safely in workspace <code>.env</code>. Leave blank to keep current key.</span>
                 </div>
+
                 <div class="form-group">
-                    <label for="settingModel" class="form-label">Model</label>
-                    <input type="text" id="settingModel" class="form-input" value="gemini-3.5-flash-lite">
+                    <label for="settingModel" class="field-label">Gemini Model</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="box" class="input-inline-icon"></i>
+                        <input type="text" id="settingModel" class="text-input" value="gemini-3.5-flash-lite">
+                    </div>
+                    <span class="field-hint">Ultra-fast sub-3s multimodal reasoning (e.g. <code>gemini-3.5-flash-lite</code> or <code>gemini-2.5-flash</code>).</span>
                 </div>
+
                 <div class="form-group">
-                    <label for="settingThreshold" class="form-label">Review Alert Threshold (%)</label>
-                    <input type="number" id="settingThreshold" class="form-input" value="70" min="40" max="95">
-                    <span class="form-hint">Flag submissions when confidence is below this percentage.</span>
+                    <label for="settingThreshold" class="field-label">Teacher Review Threshold (%)</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="shield-alert" class="input-inline-icon"></i>
+                        <input type="number" id="settingThreshold" class="text-input" value="70" min="40" max="95">
+                    </div>
+                    <span class="field-hint">Flag submissions for manual teacher audit whenever confidence falls below this score.</span>
                 </div>
-                <div id="settingsStatus" class="status-msg" style="display:none"></div>
+
+                <div id="settingsStatus" class="status-alert-box" style="display:none"></div>
             </div>
-            <div class="modal-footer">
-                <button type="button" id="btnSaveSettings" class="btn-primary">Save Settings</button>
+
+            <div class="modal-footer-bar">
+                <button type="button" id="btnTestApi" class="btn-glass">Test Connection</button>
+                <button type="button" id="btnSaveSettings" class="btn-cta-primary">Save Changes</button>
             </div>
         </div>
     </div>
 
+    <!-- Application Script -->
     <script src="/static/js/app.js"></script>
 </body>
 </html>

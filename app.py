@@ -116,6 +116,22 @@ def get_demo_master():
         data = json.load(f)
     return jsonify(data)
 
+@app.route("/api/sample/info", methods=["GET"])
+def get_sample_info():
+    """Returns metadata about the bundled CS 545 college assignment dataset."""
+    return jsonify({
+        "success": True,
+        "course": "CS 545: Advanced Distributed Systems",
+        "assignment": "Assignment 1 — Consensus, Concurrency & Fault Tolerance",
+        "total_marks": 50,
+        "master_file": "ass_1/master_solution.pdf",
+        "students": [
+            {"name": "Alex Chen", "file": "student_1_alex_chen.pdf", "pages": 3, "handwriting": "Fountain pen (Neat proofs)"},
+            {"name": "Priya Sharma", "file": "student_2_priya_sharma.pdf", "pages": 3, "handwriting": "Ballpoint pen (Authentic college handwriting)"},
+            {"name": "Marcus Vance", "file": "student_3_marcus_vance.pdf", "pages": 3, "handwriting": "Gel pen (Slanted/Flagged for manual review)"}
+        ]
+    })
+
 @app.route("/api/evaluate", methods=["POST"])
 def evaluate():
     """
@@ -125,17 +141,30 @@ def evaluate():
     """
     global LAST_EVALUATION
 
-    strictness = request.form.get("strictness", "standard").lower()
-    force_mock = request.form.get("force_mock", "false").lower() == "true"
-    use_demo_master = request.form.get("use_demo_master", "false").lower() == "true"
-    use_demo_students = request.form.get("use_demo_students", "false").lower() == "true"
-    evaluation_mode = request.form.get("evaluation_mode", "master_solution").lower()
-    subject_or_topic = request.form.get("subject_or_topic", "").strip() or None
+    json_data = request.get_json(silent=True) or {}
+    def get_param(key, default=""):
+        if key in request.form:
+            return request.form.get(key, default)
+        return json_data.get(key, default)
+
+    strictness = str(get_param("strictness", "standard")).lower()
+    force_mock = str(get_param("force_mock", "false")).lower() == "true"
+    use_demo_master = str(get_param("use_demo_master", "false")).lower() == "true"
+    use_demo_students = str(get_param("use_demo_students", "false")).lower() == "true"
+    use_sample_ass1 = str(get_param("use_sample_ass1", "false")).lower() == "true"
+    evaluation_mode = str(get_param("evaluation_mode", "master_solution")).lower()
+    subject_or_topic = str(get_param("subject_or_topic", "")).strip() or None
 
     # 1. Resolve Master Solution (Not required if evaluation_mode == 'ai_direct')
     master_solution = None
     if evaluation_mode == "ai_direct":
         master_solution = None
+    elif use_sample_ass1:
+        ass1_master = Path("ass_1/master_solution.pdf")
+        if ass1_master.exists():
+            master_solution = parse_master_solution_file(ass1_master)
+        else:
+            master_solution = parse_master_solution_file(Config.DEMO_DIR / "master_solution.json")
     elif use_demo_master:
         master_path = Config.DEMO_DIR / "master_solution.json"
         master_solution = parse_master_solution_file(master_path)
@@ -157,7 +186,22 @@ def evaluate():
 
     # 2. Resolve Student Submissions
     submissions = []
-    if use_demo_students:
+    if use_sample_ass1:
+        ass1_dir = Path("ass_1")
+        for pdf_name in ["student_1_alex_chen.pdf", "student_2_priya_sharma.pdf", "student_3_marcus_vance.pdf"]:
+            pdf_path = ass1_dir / pdf_name
+            if pdf_path.exists():
+                images = convert_pdf_to_images(pdf_path)
+                stitched_img = stitch_pages_vertically(images)
+                preview_name = f"{pdf_path.stem}_preview.jpg"
+                preview_dest = Config.UPLOAD_DIR / preview_name
+                stitched_img.save(preview_dest, "JPEG", quality=85)
+                submissions.append({
+                    "image": stitched_img,
+                    "file_name": pdf_name,
+                    "preview_url": f"/uploads/{preview_name}"
+                })
+    elif use_demo_students:
         demo_students_dir = Config.DEMO_DIR / "students"
         for img_file in sorted(demo_students_dir.glob("*.png")):
             submissions.append({
