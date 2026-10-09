@@ -204,6 +204,7 @@ Answer: Strict 2PL holds write locks until commit; Rigorous 2PL holds all locks 
     // 3. One-Click Sample Dataset Loader (CS 545 ass_1)
     // -------------------------------------------------------------------------
     function setupQuickSampleLoader() {
+        if (!btnQuickSample) return;
         btnQuickSample.addEventListener("click", async () => {
             try {
                 btnQuickSample.innerHTML = `<i data-lucide="loader-2" class="btn-icon-svg" style="animation:spinRing 1s linear infinite"></i> Loading...`;
